@@ -23,3 +23,29 @@ node server.js
 cd ../frontend
 npm start
 ```
+
+# Understanding Dependencies
+
+## Backend Dependencies
+express → creates API routes (GET, POST)
+cors → allows frontend to call backend
+dotenv → stores secrets in .env file (DB password, JWT secret)
+jsonwebtoken → creates login tokens
+express-jwt → protects routes (checks token)
+bcrypt → hashes passwords securely
+mysql2 → connects to MySQL database
+helmet → adds security headers
+morgan → logs requests
+nodemon → auto-restarts server on changes
+
+## Frontend Dependencies
+axios → calls backend APIs
+react-router-dom → page navigation
+jwt-decode → read user role from token
+
+# What we have so far
+Sadly...
+Backend server running
+Frontend calling backend
+
+Next we need to add: authentication, connection to DB

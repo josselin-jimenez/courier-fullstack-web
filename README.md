@@ -15,11 +15,11 @@ npm install
 cd ../frontend
 npm install
 ```
-IGNORE NOT YET INITIATED
-To run, backend and frontend
+
+To run, backend and frontend so far
 ```
 cd backend
-npm start
+node server.js
 cd ../frontend
 npm start
 ```

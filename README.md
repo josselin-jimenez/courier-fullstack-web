@@ -10,7 +10,7 @@ enter `npm install` in front and backend directories to ensure installation of a
 3. Download MySQL to connect to DB locally. https://dev.mysql.com/downloads/installer/
 
 ## Database Schema
-I have a copy of the database schema that we will be using for this database in this repo its the **databaseSchema.sql** file
+I have a copy of the database schema that we will be using for this database in this repo its the **DumpForRailway(1).sql** file
 Dump it in a query tab and hit enter to create the database
 
 ## .ENV Files

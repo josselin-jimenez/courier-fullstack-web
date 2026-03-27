@@ -117,8 +117,8 @@ DROP TABLE IF EXISTS `customer`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `customer` (
   `cust_id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `cust_name` varchar(100) NOT NULL COMMENT 'First + Last Name/Comany name; Per IRS, only symbols allowed in a company''''s name are alphabet, numbers, and &',
-  `cust_type` enum('normal','business') NOT NULL COMMENT 'business customers allowed drop off at processing facilities; they can also create multiple shipments at once with same service type but different destinations through the API',
+  `business_name` varchar(100) DEFAULT NULL COMMENT 'First + Last Name/Comany name; Per IRS, only symbols allowed in a company''''s name are alphabet, numbers, and &',
+  `cust_type` enum('normal','business') NOT NULL DEFAULT 'normal' COMMENT 'business customers allowed drop off at processing facilities; they can also create multiple shipments at once with same service type but different destinations through the API',
   `cust_addr` bigint unsigned NOT NULL,
   `cust_billing_addr` bigint unsigned NOT NULL,
   `cust_phone_num` bigint unsigned NOT NULL COMMENT 'longest phone num is 15 digits long',
@@ -132,7 +132,8 @@ CREATE TABLE `customer` (
   CONSTRAINT `cust_account` FOREIGN KEY (`customer_account`) REFERENCES `users` (`user_id`),
   CONSTRAINT `cust_addr` FOREIGN KEY (`cust_addr`) REFERENCES `address` (`address_id`),
   CONSTRAINT `cust_bill_addr` FOREIGN KEY (`cust_billing_addr`) REFERENCES `address` (`address_id`),
-  CONSTRAINT `chk_cust_name` CHECK (((`cust_name` <> _utf8mb4'') and regexp_like(`cust_name`,_utf8mb4'^[A-Za-z &]+$'))),
+  CONSTRAINT `chk_business_name` CHECK (((`business_name` is null) or regexp_like(`business_name`,_utf8mb4'^[A-Za-z0-9 &]+$'))),
+  CONSTRAINT `chk_business_name_required` CHECK ((((`cust_type` = _utf8mb4'business') and (`business_name` is not null)) or (`cust_type` = _utf8mb4'normal'))),
   CONSTRAINT `chk_phone_valid` CHECK (regexp_like(`cust_phone_num`,_utf8mb4'^[0-9]{7,15}$'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -147,6 +148,39 @@ LOCK TABLES `customer` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `customer_type_requests`
+--
+
+DROP TABLE IF EXISTS `customer_type_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `customer_type_requests` (
+  `request_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `cust_id` bigint unsigned NOT NULL,
+  `requested_type` enum('business') NOT NULL DEFAULT 'business',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `request_reason` text NOT NULL,
+  `reviewed_by` bigint unsigned DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`request_id`),
+  KEY `fk_request_customer` (`cust_id`),
+  KEY `fk_request_admin` (`reviewed_by`),
+  CONSTRAINT `fk_request_admin` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `fk_request_customer` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `customer_type_requests`
+--
+
+LOCK TABLES `customer_type_requests` WRITE;
+/*!40000 ALTER TABLE `customer_type_requests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `customer_type_requests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `employee`
 --
 
@@ -155,7 +189,6 @@ DROP TABLE IF EXISTS `employee`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `employee` (
   `employee_id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `employee_name` varchar(100) NOT NULL,
   `works_at` int unsigned NOT NULL,
   `employee_account` bigint unsigned NOT NULL,
   PRIMARY KEY (`employee_id`),
@@ -163,8 +196,7 @@ CREATE TABLE `employee` (
   KEY `employee_works_at_idx` (`works_at`),
   KEY `employee_account_idx` (`employee_account`),
   CONSTRAINT `employee_account` FOREIGN KEY (`employee_account`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `employee_works_at` FOREIGN KEY (`works_at`) REFERENCES `facility` (`facility_id`),
-  CONSTRAINT `chk_employee_name` CHECK (((`employee_name` <> _utf8mb4'') and regexp_like(`employee_name`,_utf8mb4'^[A-Za-z ]+$')))
+  CONSTRAINT `employee_works_at` FOREIGN KEY (`works_at`) REFERENCES `facility` (`facility_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='use to track employee that drives a vehicle or handles a package in courier process';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -274,7 +306,7 @@ CREATE TABLE `package_tracking_event` (
   `for_package` bigint unsigned NOT NULL,
   `status` int unsigned NOT NULL,
   `event_time` timestamp NOT NULL,
-  `happened_at` bigint unsigned DEFAULT NULL,
+  `happened_at` int unsigned DEFAULT NULL,
   `loaded_on` bigint unsigned DEFAULT NULL,
   `handled_by` bigint unsigned NOT NULL,
   PRIMARY KEY (`pkg_tracking_event_id`),
@@ -286,7 +318,7 @@ CREATE TABLE `package_tracking_event` (
   CONSTRAINT `track_evnt_transport` FOREIGN KEY (`loaded_on`) REFERENCES `vehicle` (`vehicle_id`),
   CONSTRAINT `trck_evnt_for_pkg` FOREIGN KEY (`for_package`) REFERENCES `package` (`package_id`),
   CONSTRAINT `trck_evnt_handling` FOREIGN KEY (`handled_by`) REFERENCES `employee` (`employee_id`),
-  CONSTRAINT `trck_evnt_location` FOREIGN KEY (`happened_at`) REFERENCES `facility` (`facility_addr`),
+  CONSTRAINT `trck_evnt_location` FOREIGN KEY (`happened_at`) REFERENCES `facility` (`facility_id`),
   CONSTRAINT `trck_evnt_status` FOREIGN KEY (`status`) REFERENCES `package_status` (`status_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -510,7 +542,7 @@ DROP TABLE IF EXISTS `users`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `user_id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(100) NOT NULL COMMENT 'First and Last',
   `email` varchar(254) NOT NULL COMMENT 'username',
   `password` varchar(255) NOT NULL COMMENT 'hashed',
   `phone_num` bigint unsigned NOT NULL,
@@ -518,7 +550,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `phone_num_UNIQUE` (`phone_num`),
   UNIQUE KEY `username_email_UNIQUE` (`email`),
-  CONSTRAINT `chk_name_of_user` CHECK (((`name` <> _utf8mb4'') and regexp_like(`name`,_utf8mb4'^[A-Za-z \'-]+$'))),
+  CONSTRAINT `chk_name_of_user` CHECK (regexp_like(`name`,_utf8mb4'^[A-Za-z]+(?:[ \'-][A-Za-z]+)+$')),
   CONSTRAINT `chk_users_email` CHECK (((`email` <> _utf8mb4'') and regexp_like(`email`,_utf8mb4'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}$'))),
   CONSTRAINT `chk_users_password_bcrypt` CHECK (((char_length(`password`) = 60) and regexp_like(`password`,_utf8mb4'^\\$2[ab]\\$[0-9]{2}\\$.{53}$'))),
   CONSTRAINT `chk_users_phone` CHECK (regexp_like(`phone_num`,_utf8mb4'^[0-9]{7,15}$'))
@@ -531,7 +563,6 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'John','john@test.com','$2b$10$zt7291//c/XleKqQgkNtmOZM4Ci1FynWkckJnKuNq0TEFrWmmMSN.',1234567890,'customer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -587,4 +618,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-26 18:53:01
+-- Dump completed on 2026-03-26 22:25:14

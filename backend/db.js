@@ -12,6 +12,7 @@ require("dotenv").config();
 const pool = mysql.createPool({
   host: process.env.DB_HOST,         // usually "localhost"
   user: process.env.DB_USER,         // your MySQL username
+  port: process.env.DB_PORT,
   password: process.env.DB_PASSWORD, // your MySQL password
   database: process.env.DB_NAME,     // the database you want to use
   waitForConnections: true,          // if all connections are busy, wait instead of erroring

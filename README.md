@@ -146,6 +146,9 @@ You should get: { "message": "Backend is working!" }
 Method: POST
 URL: http://localhost:5000/api/auth/register
 Click the Body tab → select JSON
+
+**WARNING THIS LOGIN EXIST IN THE DB ALREADY YOULL GET "Email already registered". Test with another Login**
+
 Paste:
 
 {

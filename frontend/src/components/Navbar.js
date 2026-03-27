@@ -1,0 +1,33 @@
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import { Link } from "react-router-dom";
+
+function Navbar() {
+  return (
+    <AppBar position="static" sx={{ backgroundColor: "#215bb1" }}>
+      <Toolbar>
+        <LocalShippingIcon sx={{ mr: 1 }} />
+        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
+          Team 10 - Courier System
+        </Typography>
+        <Button color="inherit" component={Link} to="/">
+          Home
+        </Button>
+        <Button color="inherit" component={Link} to="/track">
+          Track Order
+        </Button>
+        <Button color="inherit" component={Link} to="/login">
+          Login
+        </Button>
+        <Button color="inherit" component={Link} to="/Register">
+          Register
+        </Button>
+      </Toolbar>
+    </AppBar>
+  );
+}
+
+export default Navbar;

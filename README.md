@@ -1,5 +1,7 @@
 # Instructions
 I'm working on Windows with VSCode so these instructions are more geared toward that. I think this should work in other IDE's but I'm not sure.
+## If you already downloaded Repo locally
+enter `npm install` in front and backend directories to ensure installation of any packages i added
 ## Before cloning locally:
 
 ### On Windows
@@ -26,6 +28,7 @@ Copy the output and paste it into your `.env`:
 ## Once cloned:
 
 In repository directory, once at a time enter
+
 ```
 cd backend
 npm install

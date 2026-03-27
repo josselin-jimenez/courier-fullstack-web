@@ -1,5 +1,0 @@
-# Visual Studio local files
-.vs/
-.env
-.env.local
-.env.*.local

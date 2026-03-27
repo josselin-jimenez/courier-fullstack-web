@@ -3,7 +3,7 @@
 // No logic lives here — just routing.
 
 const express = require("express");
-const { register, login, getMe } = require("../controllers/authcontroller");
+const { register, login, getMe } = require("../controllers/authController");
 const { verifyToken }            = require("../middleware/authMiddleware");
 
 const router = express.Router();

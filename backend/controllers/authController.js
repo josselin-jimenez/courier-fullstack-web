@@ -8,11 +8,39 @@ const pool   = require("../db");
 
 // ─── REGISTER ────────────────────────────────────────────────────────────────
 // This is a named export — the route file will import it by this exact name
+// Validation helpers
+const NAME_RE     = /^[A-Za-zÀ-ÖØ-öø-ÿ'-]+ [A-Za-zÀ-ÖØ-öø-ÿ'-]+$/;   // first + last, letters/hyphens/apostrophes
+const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_RE = /^[\x20-\x7E]{8,72}$/;                               // printable ASCII, 8–72 chars (bcrypt 72-byte limit)
+const PHONE_RE    = /^\+[1-9][0-9]{7,14}$/;                              // +country code + 7–14 digits, max 16 chars total (varchar(16))
+
 const register = async (req, res) => {
   const { name, email, password, phone } = req.body;
 
   if (!name || !email || !password || !phone) {
     return res.status(400).json({ message: "All fields are required." });
+  }
+
+  if (!NAME_RE.test(name.trim())) {
+    return res.status(400).json({ message: "Please enter a valid first and last name (letters, hyphens, and apostrophes only)." });
+  }
+
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ message: "Please enter a valid email address." });
+  }
+
+  if (!PASSWORD_RE.test(password)) {
+    return res.status(400).json({
+      message: password.length < 8
+        ? "Password must be at least 8 characters."
+        : password.length > 72
+        ? "Password must be 72 characters or fewer."
+        : "Password contains invalid characters. Use printable characters only."
+    });
+  }
+
+  if (!PHONE_RE.test(phone)) {
+    return res.status(400).json({ message: "Phone number must start with a '+' and country code, followed by 7–14 digits (e.g. +12025550123)." });
   }
 
   try {

@@ -1,38 +1,31 @@
-// react hook for managing local state (form values, errors, loading)
 import { useState } from "react";
-// from React Router; lets you programmatically redirect to another page
-import { useNavigate, Link } from "react-router-dom";
-// MUI components 
+import { useNavigate } from "react-router-dom";
 import {
-  Box,          //div wrapper
-  Button,       //text
-  Container,    //max-width centering
-  Paper,        //card with shadow
-  TextField,    //input
-  Typography,   //text
-  Alert,        //error/success banners
+  Box,
+  Button,
+  Container,
+  Paper,
+  TextField,
+  Typography,
+  Alert,
 } from "@mui/material";
-// login function stores users token for session
 import { useAuth } from "../context/authContext";
-// to decode token
 import { jwtDecode } from "jwt-decode";
-// API call to send info submitted
-import { loginUser } from "../services/authService";
+import { registerUser, loginUser } from "../services/authService";
 
-function LoginPage() {
+function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  
-  // holds what the user has typed in the email/password fields
+
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
+    phone: "",
   });
 
-  // messages shown to the user
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  // whether a request is in flight (disables the button, changes its text)
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -42,24 +35,29 @@ function LoginPage() {
     }));
   };
 
-  // called when form is submitted
   const handleSubmit = async (e) => {
-    e.preventDefault();     // stops the browser from doing a full-page reload
-    setError("");     // clears any previous error/success messages
-    setSuccess("");   // ^
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
-    if (!formData.email || !formData.password) {
-      setError("Please enter both email and password.");
+    if (!formData.name || !formData.email || !formData.password || !formData.phone) {
+      setError("Please fill in all fields.");
       return;
     }
 
-    try { 
+    // Prepend +1 if user didn't include a country code
+    let phone = formData.phone.trim();
+    if (/^[0-9]/.test(phone)) phone = "+1" + phone;
+
+    try {
       setLoading(true);
 
-      //API call in ../services/authService
+      await registerUser(formData.name, formData.email, formData.password, phone);
+
+      // Auto-login with the same credentials
       const token = await loginUser(formData.email, formData.password);
       login(token);
-      setSuccess("Login successful.");
+      setSuccess("Account created successfully.");
 
       const decoded = jwtDecode(token);
 
@@ -71,20 +69,18 @@ function LoginPage() {
         } else if (decoded.role === "driver") {
           navigate("/DriverHome");
         } else if (decoded.role === "handler") {
-          navigate("/HandlerHome")
+          navigate("/HandlerHome");
         } else if (decoded.role === "customer service") {
-          navigate("/CustomerServiceHome")
+          navigate("/CustomerServiceHome");
         } else if (decoded.role === "customer") {
-          navigate("/CustomerHome")
+          navigate("/CustomerHome");
         } else {
           navigate("/");
         }
       }, 800);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
-    } finally { // always sets loading back to false
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -101,17 +97,26 @@ function LoginPage() {
       >
         <Paper elevation={4} sx={{ p: 4, width: "100%", borderRadius: 3 }}>
           <Typography variant="h4" align="center" gutterBottom fontWeight="bold">
-            Login
+            Register
           </Typography>
 
           <Typography variant="body1" align="center" sx={{ mb: 3 }}>
-            Sign in to access your courier account.
+            Create your courier account.
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Full Name"
+              name="name"
+              margin="normal"
+              value={formData.name}
+              onChange={handleChange}
+            />
+
             <TextField
               fullWidth
               label="Email"
@@ -132,6 +137,16 @@ function LoginPage() {
               onChange={handleChange}
             />
 
+            <TextField
+              fullWidth
+              label="Phone Number"
+              name="phone"
+              margin="normal"
+              placeholder="+12025550123"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+
             <Button
               type="submit"
               fullWidth
@@ -139,13 +154,8 @@ function LoginPage() {
               sx={{ mt: 3, py: 1.2, backgroundColor: "#215bb1" }}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Creating account..." : "Register"}
             </Button>
-
-            <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-              Don't have an account?{" "}
-              <Link to="/register">Register</Link>
-            </Typography>
           </Box>
         </Paper>
       </Box>
@@ -153,4 +163,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default RegisterPage;

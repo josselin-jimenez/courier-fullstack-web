@@ -1,4 +1,4 @@
-// React hook for managing local state (form values, errors, loading)
+// react hook for managing local state (form values, errors, loading)
 import { useState } from "react";
 // from React Router; lets you programmatically redirect to another page
 import { useNavigate } from "react-router-dom";
@@ -12,12 +12,12 @@ import {
   Typography,   //text
   Alert,        //error/success banners
 } from "@mui/material";
-// configured Axios instance for making HTTP requests to the backend
-import api from "../api/axios";
-// your custom auth context hook, which exposes the login function
+// login function stores users token for session
 import { useAuth } from "../context/authContext";
-
+// to decode token
 import { jwtDecode } from "jwt-decode";
+// API call to send info submitted
+import { loginUser } from "../services/authService";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -56,16 +56,12 @@ function LoginPage() {
     try { 
       setLoading(true);
 
-      //API call — POST's { email, password } to /api/auth/login
-      const response = await api.post("/api/auth/login", {
-        email: formData.email,
-        password: formData.password,
-      });
-
-      login(response.data.token);
+      //API call in ../services/authService
+      const token = await loginUser(formData.email, formData.password);
+      login(token);
       setSuccess("Login successful.");
 
-      const decoded = jwtDecode(response.data.token);
+      const decoded = jwtDecode(token);
 
       setTimeout(() => {
         if (decoded.role === "uma") {

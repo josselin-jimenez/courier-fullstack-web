@@ -58,7 +58,7 @@ function LoginPage() {
 
       //API call in ../services/authService
       const token = await loginUser(formData.email, formData.password);
-      login(token);
+      login(token);   // sets token for session
       setSuccess("Login successful.");
 
       const decoded = jwtDecode(token);

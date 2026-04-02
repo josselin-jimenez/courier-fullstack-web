@@ -1,70 +1,43 @@
-# Getting Started with Create React App
+# Understanding Frontend Dependencies
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+| Dependency | Description |
+|------------|-------------|
+| axios | calls backend APIs |
+| react-router-dom | page navigation |
+| jwt-decode | read user role from token |
 
-## Available Scripts
+# Understanding Frontend Files
 
-In the project directory, you can run:
+## api/axios.js
 
-### `npm start`
+HTTP client, auto-attaches user token to all user API calls
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## components/
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+UI pieces shared across multiple pages
 
-### `npm test`
+## context/authContext.js
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Holds the token and decoded user object globally. Any component calls `useAuth()` to access it.
 
-### `npm run build`
+## pages/
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Individual pages for each screen in the app where page UI is created and page specific input forms and API calls are handled.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## routes/
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+**PrivateRoute.js**
 
-### `npm run eject`
+Blocks unauthenticated/wrong-role users
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**PublicRoute.js**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Redirects logged-in users away from login/register
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## services/
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Where API call functions reside
 
-## Learn More
+## App.js
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+All routes/links defined here

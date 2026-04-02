@@ -1,10 +1,10 @@
-CREATE DATABASE  IF NOT EXISTS `team10_courier_system` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `team10_courier_system`;
+CREATE DATABASE  IF NOT EXISTS `railway` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `railway`;
 -- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
 --
--- Host: localhost    Database: team10_courier_system
+-- Host: gondola.proxy.rlwy.net    Database: railway
 -- ------------------------------------------------------
--- Server version	8.0.45
+-- Server version	9.4.0
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -545,16 +545,16 @@ CREATE TABLE `users` (
   `name` varchar(100) NOT NULL COMMENT 'First and Last',
   `email` varchar(254) NOT NULL COMMENT 'username',
   `password` varchar(255) NOT NULL COMMENT 'hashed',
-  `phone_num` bigint unsigned NOT NULL,
-  `role` enum('customer','admin','driver','handler','customer service') NOT NULL DEFAULT 'customer',
+  `phone_num` varchar(16) NOT NULL,
+  `role` enum('customer','admin','driver','handler','customer service','uma') NOT NULL DEFAULT 'customer',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `phone_num_UNIQUE` (`phone_num`),
   UNIQUE KEY `username_email_UNIQUE` (`email`),
   CONSTRAINT `chk_name_of_user` CHECK (regexp_like(`name`,_utf8mb4'^[A-Za-z]+(?:[ \'-][A-Za-z]+)+$')),
+  CONSTRAINT `chk_phone` CHECK (regexp_like(`phone_num`,_utf8mb4'^\\+[1-9][0-9]{7,14}$')),
   CONSTRAINT `chk_users_email` CHECK (((`email` <> _utf8mb4'') and regexp_like(`email`,_utf8mb4'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}$'))),
-  CONSTRAINT `chk_users_password_bcrypt` CHECK (((char_length(`password`) = 60) and regexp_like(`password`,_utf8mb4'^\\$2[ab]\\$[0-9]{2}\\$.{53}$'))),
-  CONSTRAINT `chk_users_phone` CHECK (regexp_like(`phone_num`,_utf8mb4'^[0-9]{7,15}$'))
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `chk_users_password_bcrypt` CHECK (((char_length(`password`) = 60) and regexp_like(`password`,_utf8mb4'^\\$2[ab]\\$[0-9]{2}\\$.{53}$')))
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -563,6 +563,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'Uma Ramamurthy','uramamur@bcm.edu','$2b$10$3aZy.eyLqsgPjHOUC0cix.mAgrJElZAYkF3U3VAOPTdABhfcafBKq','+11234567890','uma'),(2,'Test Customer','test@customer.com','$2b$10$xUVdmA9riWdISc7hIGEZiOQZBwcYqVx81x1F7B.VuKuhKk0UXNrHm','+19876543210','customer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -602,11 +603,11 @@ LOCK TABLES `vehicle` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'team10_courier_system'
+-- Dumping events for database 'railway'
 --
 
 --
--- Dumping routines for database 'team10_courier_system'
+-- Dumping routines for database 'railway'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -618,4 +619,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-26 22:25:14
+-- Dump completed on 2026-04-01 19:03:05

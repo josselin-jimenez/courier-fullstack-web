@@ -34,7 +34,7 @@ Code that runs between the route and the controller on protected routes aka any 
 - `verifyToken` — checks that the request includes a valid JWT token. If the token is missing, expired, or tampered with, it rejects the request immediately and the controller never runs. If valid, it attaches the decoded user info to `req.user` so the controller can use it.
 - `requireRole` - checks that the logged-in user has the right role (e.g. admin). Used after `verifyToken`
 
-**NO CODE HERE NEEDS TO BE UPDATED**
+*using this folder for resuable validation checks* 
 
 ## controllers/authController.js
 

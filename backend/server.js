@@ -14,6 +14,9 @@ require('dotenv').config();
 // Import the auth router
 const authRoutes = require("./routes/authRoute");
 
+//Import shipping router
+const shippingRoutes = require("./routes/shippingRoute");
+
 // Create app instance
 const app = express();
 
@@ -36,6 +39,8 @@ app.use(morgan("dev"));
 // Public auth routes — no token needed to hit these
 // Any request to /api/auth/... gets handed to routes/auth.js
 app.use("/api/auth", authRoutes);
+
+app.use("/api/shipping", shippingRoutes);
 
 // Basic test route
 app.get("/api/test", (req, res) => {

@@ -26,19 +26,19 @@ DROP TABLE IF EXISTS `address`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `address` (
   `address_id` bigint unsigned NOT NULL,
-  `addr_type` enum('facility','residential','apartment','business') DEFAULT NULL,
+  `addr_type` enum('facility','residential','apartment','business','military') DEFAULT NULL,
   `street_addr` varchar(70) NOT NULL,
   `apartment_num` int unsigned DEFAULT NULL,
   `city` varchar(100) NOT NULL,
   `state` varchar(60) NOT NULL,
-  `zipcode` varchar(11) NOT NULL COMMENT 'iran has longest zipcode, 10 digits',
+  `postal_code` varchar(16) DEFAULT NULL COMMENT 'postal codes not used everywhere, can be alphanumeric',
   `country` varchar(80) NOT NULL,
   PRIMARY KEY (`address_id`),
   CONSTRAINT `chk_city_valid` CHECK (regexp_like(`city`,_utf8mb4'^[A-Za-z .-]{2,100}$')),
   CONSTRAINT `chk_country_valid` CHECK (regexp_like(`country`,_utf8mb4'^[A-Za-z .-]{2,80}$')),
+  CONSTRAINT `chk_postal_code` CHECK (((`postal_code` is null) or (regexp_like(`postal_code`,_utf8mb4'^[A-Z0-9][A-Z0-9 -]{1,15}$') and (not(regexp_like(`postal_code`,_utf8mb4'^[[:space:]-]'))) and (not(regexp_like(`postal_code`,_utf8mb4'[[:space:]-]$')))))),
   CONSTRAINT `chk_state_valid` CHECK (regexp_like(`state`,_utf8mb4'^[A-Za-z .-]{2,60}$')),
-  CONSTRAINT `chk_street_addr_valid` CHECK (regexp_like(`street_addr`,_utf8mb4'^[A-Za-z0-9 .-]+$')),
-  CONSTRAINT `chk_zipcode_valid` CHECK (regexp_like(`zipcode`,_utf8mb4'^[0-9-]{5,11}$'))
+  CONSTRAINT `chk_street_addr_valid` CHECK (regexp_like(`street_addr`,_utf8mb4'^[A-Za-z0-9 .-]+$'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='addresses stored in table for easier readability';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -251,6 +251,7 @@ CREATE TABLE `package` (
   `pkg_length` int unsigned NOT NULL,
   `pkg_width` int unsigned NOT NULL,
   `pkg_height` int unsigned NOT NULL,
+  `pkg_value` decimal(10,2) unsigned DEFAULT NULL,
   PRIMARY KEY (`package_id`),
   KEY `pkg_for_shipment_idx` (`part_of_shipment`),
   CONSTRAINT `pkg_for_shipment` FOREIGN KEY (`part_of_shipment`) REFERENCES `shipment` (`shipment_id`),
@@ -446,14 +447,14 @@ DROP TABLE IF EXISTS `service_type`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `service_type` (
   `service_type_no` int unsigned NOT NULL AUTO_INCREMENT,
-  `service_category` enum('region','time','method','handling','military','caution') NOT NULL,
+  `service_category` enum('region','time','method','handling','military','caution','add-on','created') NOT NULL,
   `service_name` varchar(30) NOT NULL,
   `base_cost` decimal(10,2) unsigned NOT NULL,
   PRIMARY KEY (`service_type_no`),
   UNIQUE KEY `service_type_id_UNIQUE` (`service_type_no`),
-  CONSTRAINT `chk_base_cost_positive` CHECK ((`base_cost` > 0.00)),
+  CONSTRAINT `chk_base_cost_positive` CHECK ((`base_cost` >= 0.00)),
   CONSTRAINT `chk_service_name` CHECK (((`service_name` <> _utf8mb4'') and regexp_like(`service_name`,_utf8mb4'^[A-Za-z0-9 \\-]+$')))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -462,6 +463,7 @@ CREATE TABLE `service_type` (
 
 LOCK TABLES `service_type` WRITE;
 /*!40000 ALTER TABLE `service_type` DISABLE KEYS */;
+INSERT INTO `service_type` VALUES (1,'region','US',1.00),(2,'region','International',5.00),(3,'region','Military - AA',5.00),(4,'region','Military - AE',25.00),(5,'region','Military - AP',30.00),(10,'time','Regular',4.00),(11,'time','Express',10.00),(12,'time','Two-Day',25.00),(13,'time','Overnight',45.00),(20,'add-on','Signature',3.00),(21,'add-on','Pickup',5.00),(22,'add-on','Age Verification',3.00),(23,'add-on','Insurance',2.00),(30,'handling','Refridgerate',15.00),(40,'caution','Hazmat',10.00),(50,'created','Retail',2.00);
 /*!40000 ALTER TABLE `service_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -534,6 +536,32 @@ LOCK TABLES `shipment_service_type` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `shipping_rates`
+--
+
+DROP TABLE IF EXISTS `shipping_rates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `shipping_rates` (
+  `shipping_rate_no` int NOT NULL AUTO_INCREMENT,
+  `rate_type` varchar(20) NOT NULL,
+  `rate_amount` decimal(4,2) unsigned NOT NULL,
+  PRIMARY KEY (`shipping_rate_no`),
+  UNIQUE KEY `rate_type_UNIQUE` (`rate_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `shipping_rates`
+--
+
+LOCK TABLES `shipping_rates` WRITE;
+/*!40000 ALTER TABLE `shipping_rates` DISABLE KEYS */;
+INSERT INTO `shipping_rates` VALUES (1,'weight',0.10),(2,'distance',0.01),(3,'handling_fee',1.50),(4,'insurance',0.15);
+/*!40000 ALTER TABLE `shipping_rates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -554,7 +582,7 @@ CREATE TABLE `users` (
   CONSTRAINT `chk_phone` CHECK (regexp_like(`phone_num`,_utf8mb4'^\\+[1-9][0-9]{7,14}$')),
   CONSTRAINT `chk_users_email` CHECK (((`email` <> _utf8mb4'') and regexp_like(`email`,_utf8mb4'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}$'))),
   CONSTRAINT `chk_users_password_bcrypt` CHECK (((char_length(`password`) = 60) and regexp_like(`password`,_utf8mb4'^\\$2[ab]\\$[0-9]{2}\\$.{53}$')))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -563,7 +591,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Uma Ramamurthy','uramamur@bcm.edu','$2b$10$3aZy.eyLqsgPjHOUC0cix.mAgrJElZAYkF3U3VAOPTdABhfcafBKq','+11234567890','uma'),(2,'Test Customer','test@customer.com','$2b$10$xUVdmA9riWdISc7hIGEZiOQZBwcYqVx81x1F7B.VuKuhKk0UXNrHm','+19876543210','customer');
+INSERT INTO `users` VALUES (1,'Uma Ramamurthy','uramamur@bcm.edu','$2b$10$3aZy.eyLqsgPjHOUC0cix.mAgrJElZAYkF3U3VAOPTdABhfcafBKq','+11234567890','uma'),(2,'Test Customer','test@customer.com','$2b$10$xUVdmA9riWdISc7hIGEZiOQZBwcYqVx81x1F7B.VuKuhKk0UXNrHm','+19876543210','customer'),(3,'Labubu Jones','c@g.com','$2b$10$dd205/Gs26MBB4JnDoPtzOq4US2K4Aj.l7yQdpKrBCo7m/U6vSMOy','+11111111111','customer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -619,4 +647,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-01 19:03:05
+-- Dump completed on 2026-04-06  3:33:26

@@ -5,6 +5,8 @@ With the following instructions you should be able to test front/backend develop
 
 **Please make sure to check backend and frontend readMe's as well for more info**
 
+**I added google API keys for address validation and distance calculation, CONTACT ME FOR THEM**
+
 ## If you already downloaded Repo locally
 enter `npm install` in front and backend directories to ensure installation of any packages i added, if nothing happens then they're already downloaded
 
@@ -38,7 +40,10 @@ JWT_SECRET=Instructions_below
 
 Run this in your terminal:
 
-``node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"``
+```
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+```
 
 Copy the output and paste it into your `.env`:
 
@@ -82,6 +87,11 @@ Home page needs work in terms of adding buttons and links to any newly added pag
 Tasks for Website:
 - Create custom admin, customer, customer service, driver, handler, and uma home/dashboard pages that contain links to actions accessible to their role
 - Create package tracking page: involves creating view from database, backend controller and routing for the page, frontend form page
+- Add customer request page to change from regular to business
+
+### Next task I'm working on
+
+Add create shipment using shipment calculator logic + appropriate query for insertion in all related shipment tables
 
 ## How Frontend and backend work together
 

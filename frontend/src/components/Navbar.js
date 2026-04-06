@@ -26,7 +26,7 @@ function Navbar() {
           Home
         </Button>
         <Button color="inherit" component={Link} to="/track">
-          Track Order
+          Track
         </Button>
         {token ? (
           <Button color="inherit" onClick={handleLogout}>
@@ -34,6 +34,9 @@ function Navbar() {
           </Button>
         ) : (
           <>
+            <Button color="inherit" component={Link} to="/ShippingCalculator">
+              Get Estimate
+            </Button>
             <Button color="inherit" component={Link} to="/login">
               Login
             </Button>

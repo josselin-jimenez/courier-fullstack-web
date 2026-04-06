@@ -88,6 +88,8 @@ Tasks for Website:
 - Create custom admin, customer, customer service, driver, handler, and uma home/dashboard pages that contain links to actions accessible to their role
 - Create package tracking page: involves creating view from database, backend controller and routing for the page, frontend form page
 - Add customer request page to change from regular to business
+- Make a list of pages involving data entry/viewing that are only accessibile to specific roles
+- Figure out how package/vehicle routing is going to be handled
 
 ### Next task I'm working on
 

@@ -17,6 +17,9 @@ const authRoutes = require("./routes/authRoute");
 //Import shipping router
 const shippingRoutes = require("./routes/shippingRoute");
 
+// Customer type request route
+const customerTypeRequestRoutes = require("./routes/customerTypeRequestRoute");
+
 // Create app instance
 const app = express();
 
@@ -41,6 +44,9 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/shipping", shippingRoutes);
+
+// Customer type request route
+app.use("/api/customer-type-requests", customerTypeRequestRoutes);
 
 // Basic test route
 app.get("/api/test", (req, res) => {

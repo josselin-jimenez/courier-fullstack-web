@@ -56,15 +56,15 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await pool.execute(
-      "INSERT INTO users (name, email, password, phone_num) VALUES (?, ?, ?, ?)",
-      [name, email, hashedPassword, phone]
+     "INSERT INTO users (name, email, password, phone_num, role) VALUES (?, ?, ?, ?, ?)",
+     [name, email, hashedPassword, phone, "customer"]
     );
 
     res.status(201).json({ message: "Account created successfully." });
 
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ message: "Server error." });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -87,6 +87,7 @@ const login = async (req, res) => {
     }
 
     const user = rows[0];
+
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
@@ -94,7 +95,7 @@ const login = async (req, res) => {
     }
 
     const payload = { id: user.user_id, name: user.name, email: user.email, phone: user.phone_num, role: user.role };
-    const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
       token,

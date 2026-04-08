@@ -36,6 +36,7 @@ DB_PASSWORD=YOUR_DB_PASSWORD
 DB_NAME=YOUR_DB_NAME
 DB_PORT=3306_or_your_db_port
 JWT_SECRET=Instructions_below
+GOOGLE_MAPS_API_KEY=key_that_you_ask_me_for_so_i_dont_post_it_on_github_posing_a_security_issue
 ```
 
 Run this in your terminal:

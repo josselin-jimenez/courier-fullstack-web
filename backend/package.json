@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "predev": "npx kill-port 5000",
     "dev": "nodemon server.js"
   },
   "keywords": [],

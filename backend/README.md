@@ -12,6 +12,7 @@
 | helmet | adds security headers |
 | morgan | logs requests |
 | nodemon | auto-restarts server on changes |
+| google maps | uses google geocoding and maps for things like validating addresses and calculating distance
 
 # Understaning Backend Files
 

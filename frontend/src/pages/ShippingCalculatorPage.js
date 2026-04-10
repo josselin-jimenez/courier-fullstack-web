@@ -277,20 +277,18 @@ function ShippingCalculatorPage() {
         )}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <TextField
-              fullWidth label="Street Address"
-              value={addr.streetAddr}
-              onChange={(e) => handleAddressChange(addressKey, "streetAddr", e.target.value)}
-              sx={{ flex: 3 }}
-            />
-            <TextField
-              label="Apt / Unit (optional)"
-              value={addr.unit}
-              onChange={(e) => handleAddressChange(addressKey, "unit", e.target.value)}
-              sx={{ flex: 1 }}
-            />
-          </Box>
+          <TextField
+            fullWidth
+            label="Street Address"
+            value={addr.streetAddr}
+            onChange={(e) => handleAddressChange(addressKey, "streetAddr", e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Address Line 2 (Unit/Apt/Building)"
+            value={addr.unit}
+            onChange={(e) => handleAddressChange(addressKey, "unit", e.target.value)}
+          />
           <Box sx={{ display: "flex", gap: 2 }}>
             {isMilitary ? (
               <FormControl fullWidth>

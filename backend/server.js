@@ -17,6 +17,8 @@ const authRoutes = require("./routes/authRoute");
 //Import shipping router
 const shippingRoutes = require("./routes/shippingRoute");
 
+const customerRoutes = require("./routes/customerRoute");
+
 // Create app instance
 const app = express();
 
@@ -26,12 +28,12 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.CLIENT_URL, // e.g. "http://localhost:3000"
   credentials: true               // allows cookies/auth headers to be sent cross-origin
-})); 
+}));
 
-app.use(express.json()); 
+app.use(express.json());
 // Parses JSON body from requests (important for POST requests)
 
-app.use(morgan("dev")); 
+app.use(morgan("dev"));
 // Logs requests in terminal
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -41,6 +43,8 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/shipping", shippingRoutes);
+
+app.use("/api/customer", customerRoutes);
 
 // Basic test route
 app.get("/api/test", (req, res) => {

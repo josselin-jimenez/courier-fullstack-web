@@ -14,6 +14,7 @@ const VALIDATION_SUPPORTED_COUNTRIES = new Set([
   "LV","MX","MY","NL","NO","NZ","PL","PR","PT","SE","SG","SI","SK","US"
 ]);
 
+const UNIT_RE = /^[A-Za-z0-9 .#/,-]{1,50}$/;
 // ─── GOOGLE ADDRESS VALIDATION API ───────────────────────────────────────────
 // Used for countries supported by Google Address Validation API
 const validateAndGeocode = async (streetAddr, unit, city, state, country, postalCode) => {
@@ -37,7 +38,7 @@ const validateAndGeocode = async (streetAddr, unit, city, state, country, postal
   );
 
   const data = await response.json();
-  //console.log("Address Validation response:", JSON.stringify(data, null, 2));
+  console.log("Address Validation response:", JSON.stringify(data, null, 2));
   const result = data.result;
 
   if (!result) {
@@ -92,7 +93,10 @@ const geocodeOnly = async (streetAddr, unit, city, state, country, postalCode) =
 // Validates an address and returns { lat, lng }
 // Routes to Address Validation API or Geocoding API based on country support
 // Does NOT handle military logic — callers decide whether to invoke this
-const validateAddress = (streetAddr, unit, city, state, country, postalCode) => {
+const validateAddress = ({ streetAddr, unit, city, state, country, postalCode }) => {
+  if (unit && !UNIT_RE.test(unit)) {
+    throw new Error(`Invalid Address Line 2 format. Try Again.`)
+  }
   if (VALIDATION_SUPPORTED_COUNTRIES.has(country)) {
     return validateAndGeocode(streetAddr, unit, city, state, country, postalCode);
   }
@@ -107,7 +111,7 @@ const MILITARY_ZIP_RE     = /^(09[0-9]{3}|340[0-9]{2}|96[2-6][0-9]{2})$/;
 const ACCEPTABLE_MILITARY_CITIES = new Set(["APO", "FPO", "DPO"]);
 const ACCEPTABLE_MILITARY_STATES = new Set(["AE", "AA", "AP"]);
 
-const validateMilitaryAddress = (streetAddr, city, state, country, postalCode) => {
+const validateMilitaryAddress = ({streetAddr, city, state, country, postalCode}) => {
   if (country !== "US") {
     throw new Error("Country must be US for military address.");
   }

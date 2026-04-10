@@ -5,6 +5,7 @@
 const bcrypt = require("bcrypt");
 const jwt    = require("jsonwebtoken");
 const pool   = require("../db");
+const { validateAddress } = require("../middleware/addressMiddleware");
 
 // ─── REGISTER ────────────────────────────────────────────────────────────────
 // This is a named export — the route file will import it by this exact name
@@ -15,9 +16,9 @@ const PASSWORD_RE = /^[\x20-\x7E]{8,72}$/;                               // prin
 const PHONE_RE    = /^\+[1-9][0-9]{7,14}$/;                              // +country code + 7–14 digits, max 16 chars total (varchar(16))
 
 const register = async (req, res) => {
-  const { name, email, password, phone } = req.body;
+  const { name, email, password, phone, custAddress } = req.body;
 
-  if (!name || !email || !password || !phone) {
+  if (!name || !email || !password || !phone || !custAddress) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -43,28 +44,82 @@ const register = async (req, res) => {
     return res.status(400).json({ message: "Phone number must start with a '+' and country code, followed by 7–14 digits (e.g. +12025550123)." });
   }
 
+  // Check email and hash password before opening a connection
   try {
-    const [existing] = await pool.execute(
+    const [existingEmail] = await pool.execute(
       "SELECT user_id FROM users WHERE email = ?",
       [email]
     );
 
-    if (existing.length > 0) {
+    if (existingEmail.length > 0) {
       return res.status(409).json({ message: "Email already registered." });
     }
+  } catch (err) {
+    console.error("Register error:", err);
+    return res.status(500).json({ message: "Server error." });
+  }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    await pool.execute(
+  const connection = await pool.getConnection();
+  try { //try to insert all, if one fails, all data is deleted
+    const coordinatesCustAddr = await validateAddress(custAddress);
+
+    await connection.beginTransaction();
+
+    // see if address already in table, select based on whether unit was entered by user
+    const unit = custAddress.unit || null;
+    const [existingAddress] = await connection.execute(
+      unit
+        ? "SELECT address_id FROM address WHERE street_addr = ? AND addr_line_2 = ? AND city = ? AND postal_code = ? AND country = ?"
+        : "SELECT address_id FROM address WHERE street_addr = ? AND addr_line_2 IS NULL AND city = ? AND postal_code = ? AND country = ?",
+      unit
+        ? [custAddress.streetAddr, unit, custAddress.city, custAddress.postalCode, custAddress.country]
+        : [custAddress.streetAddr, custAddress.city, custAddress.postalCode, custAddress.country]
+    );
+
+    // if not, enter new address
+    let addressId;
+    if (existingAddress.length > 0) {
+      addressId = existingAddress[0].address_id;
+    } else {
+      const [addressResult] = await connection.execute( 
+        "INSERT INTO address (street_addr, addr_line_2, city, state, postal_code, country, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [custAddress.streetAddr, custAddress.unit || null, custAddress.city, custAddress.state, custAddress.postalCode, custAddress.country,
+          coordinatesCustAddr.lat, coordinatesCustAddr.lng ]
+      );
+      addressId = addressResult.insertId;
+    }
+
+    const [userResult] = await connection.execute(
       "INSERT INTO users (name, email, password, phone_num) VALUES (?, ?, ?, ?)",
       [name, email, hashedPassword, phone]
     );
 
+    const userId = userResult.insertId;
+
+    await connection.execute(
+      "INSERT INTO customer (cust_addr, cust_account) VALUES (?, ?)",
+      [addressId, userId]
+    );
+
+    await connection.commit();
     res.status(201).json({ message: "Account created successfully." });
 
   } catch (err) {
+    await connection.rollback();
+    const isAddressError =
+            err.message?.startsWith("Could not validate address")    ||
+            err.message?.startsWith("Could not geocode address")     ||
+            err.message?.startsWith("Address not precise enough")    ||
+            err.message?.startsWith("Unconfirmed address components");
+    if (isAddressError) { res.status(400).json({ message: "Invalid Address. Try again."})}
+    else {
     console.error("Register error:", err);
     res.status(500).json({ message: "Server error." });
+    }
+  } finally {
+    connection.release();
   }
 };
 

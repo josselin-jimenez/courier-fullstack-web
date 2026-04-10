@@ -118,14 +118,14 @@ const calculateEstimate = async (req, res) => {
         }
 
         // Military street, city, and postal code regex validation
-        if (originIsMilitary) validateMilitaryAddress(origin.streetAddr, origin.city, origin.state, origin.country, origin.postalCode);
-        if (destinationIsMilitary) validateMilitaryAddress(destination.streetAddr, destination.city, destination.state, destination.country, destination.postalCode);
+        if (originIsMilitary) validateMilitaryAddress(origin);
+        if (destinationIsMilitary) validateMilitaryAddress(destination);
 
         // ── Validate addresses and get coordinates ────────────────────────────
         // Military addresses validated separately and use a flat distance rate
         const [originCoords, destinationCoords] = await Promise.all([
-            originIsMilitary      ? Promise.resolve(null) : validateAddress(origin.streetAddr,      origin.unit,      origin.city,      origin.state,      origin.country,      origin.postalCode),
-            destinationIsMilitary ? Promise.resolve(null) : validateAddress(destination.streetAddr, destination.unit, destination.city, destination.state, destination.country, destination.postalCode),
+            originIsMilitary      ? Promise.resolve(null) : validateAddress(origin),
+            destinationIsMilitary ? Promise.resolve(null) : validateAddress(destination),
         ]);
         // calculate total cost in ./services/shippingService  
         const totalCost = await calculateCost({

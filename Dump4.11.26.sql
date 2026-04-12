@@ -25,21 +25,22 @@ DROP TABLE IF EXISTS `address`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `address` (
-  `address_id` bigint unsigned NOT NULL,
-  `addr_type` enum('facility','residential','apartment','business','military') DEFAULT NULL,
+  `address_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `street_addr` varchar(70) NOT NULL,
-  `apartment_num` int unsigned DEFAULT NULL,
+  `addr_line_2` varchar(50) DEFAULT NULL,
   `city` varchar(100) NOT NULL,
   `state` varchar(60) NOT NULL,
   `postal_code` varchar(16) DEFAULT NULL COMMENT 'postal codes not used everywhere, can be alphanumeric',
   `country` varchar(80) NOT NULL,
+  `latitude` decimal(10,7) NOT NULL,
+  `longitude` decimal(10,7) NOT NULL,
   PRIMARY KEY (`address_id`),
   CONSTRAINT `chk_city_valid` CHECK (regexp_like(`city`,_utf8mb4'^[A-Za-z .-]{2,100}$')),
   CONSTRAINT `chk_country_valid` CHECK (regexp_like(`country`,_utf8mb4'^[A-Za-z .-]{2,80}$')),
   CONSTRAINT `chk_postal_code` CHECK (((`postal_code` is null) or (regexp_like(`postal_code`,_utf8mb4'^[A-Z0-9][A-Z0-9 -]{1,15}$') and (not(regexp_like(`postal_code`,_utf8mb4'^[[:space:]-]'))) and (not(regexp_like(`postal_code`,_utf8mb4'[[:space:]-]$')))))),
   CONSTRAINT `chk_state_valid` CHECK (regexp_like(`state`,_utf8mb4'^[A-Za-z .-]{2,60}$')),
   CONSTRAINT `chk_street_addr_valid` CHECK (regexp_like(`street_addr`,_utf8mb4'^[A-Za-z0-9 .-]+$'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='addresses stored in table for easier readability';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='addresses stored in table for easier readability';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,6 +49,7 @@ CREATE TABLE `address` (
 
 LOCK TABLES `address` WRITE;
 /*!40000 ALTER TABLE `address` DISABLE KEYS */;
+INSERT INTO `address` VALUES (4,'4302 University Dr',NULL,'Houston','Texas','77004','US',29.7208477,-95.3434131);
 /*!40000 ALTER TABLE `address` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -118,24 +120,18 @@ DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer` (
   `cust_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `business_name` varchar(100) DEFAULT NULL COMMENT 'First + Last Name/Comany name; Per IRS, only symbols allowed in a company''''s name are alphabet, numbers, and &',
-  `cust_type` enum('normal','business') NOT NULL DEFAULT 'normal' COMMENT 'business customers allowed drop off at processing facilities; they can also create multiple shipments at once with same service type but different destinations through the API',
+  `cust_type` enum('Normal','Business') NOT NULL DEFAULT 'Normal' COMMENT 'business customers allowed drop off at processing facilities; they can also create multiple shipments at once with same service type but different destinations through the API',
   `cust_addr` bigint unsigned NOT NULL,
-  `cust_billing_addr` bigint unsigned NOT NULL,
-  `cust_phone_num` bigint unsigned NOT NULL COMMENT 'longest phone num is 15 digits long',
-  `customer_account` bigint unsigned NOT NULL,
+  `cust_account` bigint unsigned NOT NULL,
   PRIMARY KEY (`cust_id`),
-  UNIQUE KEY `cust_phone_num_UNIQUE` (`cust_phone_num`),
-  UNIQUE KEY `customer_account_UNIQUE` (`customer_account`),
-  KEY `cust_bill_addr_idx` (`cust_billing_addr`),
+  UNIQUE KEY `customer_account_UNIQUE` (`cust_account`),
   KEY `cust_addr_idx` (`cust_addr`),
-  KEY `cust_account_idx` (`customer_account`),
-  CONSTRAINT `cust_account` FOREIGN KEY (`customer_account`) REFERENCES `users` (`user_id`),
+  KEY `cust_account_idx` (`cust_account`),
+  CONSTRAINT `cust_account` FOREIGN KEY (`cust_account`) REFERENCES `users` (`user_id`),
   CONSTRAINT `cust_addr` FOREIGN KEY (`cust_addr`) REFERENCES `address` (`address_id`),
-  CONSTRAINT `cust_bill_addr` FOREIGN KEY (`cust_billing_addr`) REFERENCES `address` (`address_id`),
   CONSTRAINT `chk_business_name` CHECK (((`business_name` is null) or regexp_like(`business_name`,_utf8mb4'^[A-Za-z0-9 &]+$'))),
-  CONSTRAINT `chk_business_name_required` CHECK ((((`cust_type` = _utf8mb4'business') and (`business_name` is not null)) or (`cust_type` = _utf8mb4'normal'))),
-  CONSTRAINT `chk_phone_valid` CHECK (regexp_like(`cust_phone_num`,_utf8mb4'^[0-9]{7,15}$'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `chk_business_name_required` CHECK ((((`cust_type` = _utf8mb4'business') and (`business_name` is not null)) or (`cust_type` = _utf8mb4'normal')))
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -144,8 +140,33 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
+INSERT INTO `customer` VALUES (5,NULL,'Normal',4,8);
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Temporary view structure for view `customer_profile`
+--
+
+DROP TABLE IF EXISTS `customer_profile`;
+/*!50001 DROP VIEW IF EXISTS `customer_profile`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `customer_profile` AS SELECT 
+ 1 AS `user_id`,
+ 1 AS `name`,
+ 1 AS `email`,
+ 1 AS `phone_num`,
+ 1 AS `cust_id`,
+ 1 AS `cust_type`,
+ 1 AS `business_name`,
+ 1 AS `street_addr`,
+ 1 AS `addr_line_2`,
+ 1 AS `city`,
+ 1 AS `state`,
+ 1 AS `postal_code`,
+ 1 AS `country`*/;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `customer_type_requests`
@@ -159,16 +180,18 @@ CREATE TABLE `customer_type_requests` (
   `cust_id` bigint unsigned NOT NULL,
   `requested_type` enum('business') NOT NULL DEFAULT 'business',
   `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `request_reason` text NOT NULL,
+  `business_name` varchar(100) NOT NULL,
+  `request_info` text NOT NULL,
   `reviewed_by` bigint unsigned DEFAULT NULL,
   `reviewed_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`request_id`),
   KEY `fk_request_customer` (`cust_id`),
   KEY `fk_request_admin` (`reviewed_by`),
-  CONSTRAINT `fk_request_admin` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `fk_request_customer` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `fk_request_admin` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_request_customer` FOREIGN KEY (`cust_id`) REFERENCES `customer` (`cust_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chk_req_business_name` CHECK (regexp_like(`business_name`,_utf8mb4'^[A-Za-z0-9 &]+$'))
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -177,6 +200,7 @@ CREATE TABLE `customer_type_requests` (
 
 LOCK TABLES `customer_type_requests` WRITE;
 /*!40000 ALTER TABLE `customer_type_requests` DISABLE KEYS */;
+INSERT INTO `customer_type_requests` VALUES (1,5,'business','pending','University of Houston','I business',NULL,NULL,'2026-04-12 02:26:01');
 /*!40000 ALTER TABLE `customer_type_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -223,7 +247,6 @@ CREATE TABLE `facility` (
   `facility_addr` bigint unsigned NOT NULL,
   PRIMARY KEY (`facility_id`),
   KEY `facility_addr_idx` (`facility_addr`),
-  CONSTRAINT `facility_addr` FOREIGN KEY (`facility_addr`) REFERENCES `address` (`address_id`),
   CONSTRAINT `chk_facility_name` CHECK (((`facility_name` <> _utf8mb4'') and regexp_like(`facility_name`,_utf8mb4'^[A-Za-z0-9 .&,\\-]+$')))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -365,6 +388,7 @@ CREATE TABLE `payment` (
   `date_paid` date NOT NULL,
   `total_paid` decimal(10,2) unsigned NOT NULL,
   `payment_method` enum('credit','debit','cash','check') NOT NULL,
+  `billing_addr` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`payment_id`),
   CONSTRAINT `chk_total_paid_positive` CHECK ((`total_paid` > 0.00))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -390,9 +414,7 @@ CREATE TABLE `route` (
   `route_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `route_type` enum('drop-off','delivery','line haul') NOT NULL,
   `start_location` bigint unsigned NOT NULL,
-  PRIMARY KEY (`route_id`),
-  KEY `route_start_location_idx` (`start_location`),
-  CONSTRAINT `route_start_location` FOREIGN KEY (`start_location`) REFERENCES `address` (`address_id`)
+  PRIMARY KEY (`route_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -421,11 +443,7 @@ CREATE TABLE `route_stop` (
   `est_time_arrival` timestamp NOT NULL,
   `actual_arrival_time` timestamp NULL DEFAULT NULL,
   `for_route` bigint unsigned NOT NULL,
-  PRIMARY KEY (`route_stop_id`),
-  KEY `rt_stop_end_idx` (`stop_location`),
-  KEY `rt_stop_for_route_idx` (`for_route`),
-  CONSTRAINT `rt_stop_end` FOREIGN KEY (`stop_location`) REFERENCES `address` (`address_id`),
-  CONSTRAINT `rt_stop_for_route` FOREIGN KEY (`for_route`) REFERENCES `route` (`route_id`)
+  PRIMARY KEY (`route_stop_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -487,10 +505,8 @@ CREATE TABLE `shipment` (
   UNIQUE KEY `tracking_number_UNIQUE` (`tracking_number`),
   KEY `shipment_for_customer_idx` (`for_customer`),
   KEY `transaction_for_shipment_idx` (`shipment_transaction`),
-  KEY `shipment_reciever_address_idx` (`receiver_addr`),
   KEY `shipment_service_types_idx` (`service_types`),
   CONSTRAINT `shipment_for_customer` FOREIGN KEY (`for_customer`) REFERENCES `customer` (`cust_id`),
-  CONSTRAINT `shipment_reciever_address` FOREIGN KEY (`receiver_addr`) REFERENCES `address` (`address_id`),
   CONSTRAINT `shipment_service_types` FOREIGN KEY (`service_types`) REFERENCES `service_type` (`service_type_no`),
   CONSTRAINT `transaction_for_shipment` FOREIGN KEY (`shipment_transaction`) REFERENCES `payment` (`payment_id`),
   CONSTRAINT `chk_insur_amt` CHECK ((`insur_amt` <= 100000)),
@@ -582,7 +598,7 @@ CREATE TABLE `users` (
   CONSTRAINT `chk_phone` CHECK (regexp_like(`phone_num`,_utf8mb4'^\\+[1-9][0-9]{7,14}$')),
   CONSTRAINT `chk_users_email` CHECK (((`email` <> _utf8mb4'') and regexp_like(`email`,_utf8mb4'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}$'))),
   CONSTRAINT `chk_users_password_bcrypt` CHECK (((char_length(`password`) = 60) and regexp_like(`password`,_utf8mb4'^\\$2[ab]\\$[0-9]{2}\\$.{53}$')))
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -591,7 +607,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Uma Ramamurthy','uramamur@bcm.edu','$2b$10$3aZy.eyLqsgPjHOUC0cix.mAgrJElZAYkF3U3VAOPTdABhfcafBKq','+11234567890','uma'),(2,'Test Customer','test@customer.com','$2b$10$xUVdmA9riWdISc7hIGEZiOQZBwcYqVx81x1F7B.VuKuhKk0UXNrHm','+19876543210','customer'),(3,'Labubu Jones','c@g.com','$2b$10$dd205/Gs26MBB4JnDoPtzOq4US2K4Aj.l7yQdpKrBCo7m/U6vSMOy','+11111111111','customer');
+INSERT INTO `users` VALUES (8,'Test User','test@user.com','$2b$10$uTvIcZE615KwzDj6EWltpuIaxqaKL5Z5rGsCPtmaaJdCHREfxdMjG','+11234567890','customer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -612,8 +628,6 @@ CREATE TABLE `vehicle` (
   `max_height_inch` int unsigned NOT NULL,
   `last_location` bigint unsigned NOT NULL,
   PRIMARY KEY (`vehicle_id`),
-  KEY `vehicle_last_location_idx` (`last_location`),
-  CONSTRAINT `vehicle_last_location` FOREIGN KEY (`last_location`) REFERENCES `address` (`address_id`),
   CONSTRAINT `chk_vehicle_height_cap` CHECK ((`max_height_inch` >= 1)),
   CONSTRAINT `chk_vehicle_identifier` CHECK (regexp_like(`vehicle_transit_identifier`,_utf8mb4'^[A-Z0-9 \\-]{2,15}$')),
   CONSTRAINT `chk_vehicle_sqft_cap` CHECK ((`sqft_cap` >= 1)),
@@ -637,6 +651,24 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'railway'
 --
+
+--
+-- Final view structure for view `customer_profile`
+--
+
+/*!50001 DROP VIEW IF EXISTS `customer_profile`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `customer_profile` AS select `u`.`user_id` AS `user_id`,`u`.`name` AS `name`,`u`.`email` AS `email`,`u`.`phone_num` AS `phone_num`,`c`.`cust_id` AS `cust_id`,`c`.`cust_type` AS `cust_type`,`c`.`business_name` AS `business_name`,`a`.`street_addr` AS `street_addr`,`a`.`addr_line_2` AS `addr_line_2`,`a`.`city` AS `city`,`a`.`state` AS `state`,`a`.`postal_code` AS `postal_code`,`a`.`country` AS `country` from ((`users` `u` join `customer` `c` on((`u`.`user_id` = `c`.`cust_account`))) join `address` `a` on((`c`.`cust_addr` = `a`.`address_id`))) where (`u`.`role` = 'customer') */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -647,4 +679,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-06  3:33:26
+-- Dump completed on 2026-04-11 21:50:13

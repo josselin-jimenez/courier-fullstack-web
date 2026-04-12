@@ -7,6 +7,8 @@ With the following instructions you should be able to test front/backend develop
 
 **I added google API keys for address validation and distance calculation, CONTACT ME FOR THEM**
 
+**If you have problems with already stored hashed passwords it might be bc they were created with my token**
+
 ## If you already downloaded Repo locally
 enter `npm install` in front and backend directories to ensure installation of any packages i added, if nothing happens then they're already downloaded
 

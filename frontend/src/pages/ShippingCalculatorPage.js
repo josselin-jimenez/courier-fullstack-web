@@ -4,7 +4,7 @@ import {
   Radio, RadioGroup, FormControlLabel, FormControl, FormLabel,
   Checkbox, Divider, CircularProgress, Select, MenuItem, InputLabel,
 } from "@mui/material";
-import api from "../api/axios";
+import { getShippingServices, calculateShippingEstimate } from "../services/shippingService";
 
 const VALIDATION_COUNTRIES = [
   { code: "AR", name: "Argentina" },
@@ -107,9 +107,9 @@ function ShippingCalculatorPage() {
 
   // ── Fetch services on mount ───────────────────────────────────────────────
   useEffect(() => {
-    api.get("/api/shipping/services")
-      .then((res) => {
-        const grouped = groupByCategory(res.data);
+    getShippingServices()
+      .then((data) => {
+        const grouped = groupByCategory(data);
         setServices(grouped);
         setFormData((prev) => ({
           ...prev,
@@ -232,7 +232,7 @@ function ShippingCalculatorPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/api/shipping/estimate", {
+      const data = await calculateShippingEstimate({
         serviceTypes,
         origin:                formData.originIsMilitary ? { ...formData.origin, state: militaryStateCode } : formData.origin,
         originIsMilitary:      formData.originIsMilitary,
@@ -240,7 +240,7 @@ function ShippingCalculatorPage() {
         destinationIsMilitary: formData.destinationIsMilitary,
         packages:              formData.packages,
       });
-      setSuccess(`Estimated cost: $${res.data.totalCost.toFixed(2)}`);
+      setSuccess(`Estimated cost: $${data.totalCost.toFixed(2)}`);
     } catch (err) {
       setError("api", err.response?.data?.message || "Failed to calculate estimate.");
     } finally {

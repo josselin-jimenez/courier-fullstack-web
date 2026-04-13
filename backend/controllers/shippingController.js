@@ -1,7 +1,7 @@
 //functions: getServices (from DB), calculateEstimate (calculator, No DB insertion), createOrder(calculator + DB insertion)
 
 const pool = require("../db");
-const { validateAddress, validateMilitaryAddress } = require("../middleware/addressMiddleware");
+const { validateAddress } = require("../middleware/addressMiddleware");
 const { calculateCost } = require("../services/shippingService");
 
 // ─── GET SERVICES ────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ const getServices = async (req, res) => {
 // ─── CALCULATE ESTIMATE  ─────────────────────────────────────────────────────
 // Public - available to any website visitor
 const calculateEstimate = async (req, res) => {
-    const { origin, originIsMilitary, destination, destinationIsMilitary, serviceTypes, packages } = req.body;
+    const { origin, destination, serviceTypes, packages } = req.body;
 
     try {
         // ── Package validation ────────────────────────────────────────────────
@@ -39,10 +39,10 @@ const calculateEstimate = async (req, res) => {
 
         // ── Address field presence check ──────────────────────────────────────
         const addressFields = ["streetAddr", "city", "country", "postalCode"];
-        if (!originIsMilitary && addressFields.some(f => !origin?.[f])) {
+        if (addressFields.some(f => !origin?.[f])) {
             return res.status(400).json({ message: "Please fill all origin address fields." });
         }
-        if (!destinationIsMilitary && addressFields.some(f => !destination?.[f])) {
+        if (addressFields.some(f => !destination?.[f])) {
             return res.status(400).json({ message: "Please fill all destination address fields." });
         }
 
@@ -82,29 +82,6 @@ const calculateEstimate = async (req, res) => {
             return res.status(400).json({ message: "Region service must be changed to domestic." });
         }
 
-        // ── Military constraints ──────────────────────────────────────────────
-        if (!originIsMilitary && !destinationIsMilitary && regionService?.service_name.startsWith("Military")) {
-            return res.status(400).json({ message: "Military address not entered for service region of type military."})
-        }
-        if ((originIsMilitary || destinationIsMilitary) && !regionService?.service_name.startsWith("Military")) {
-            return res.status(400).json({ message: "If origin/destination is military, change service region to appropriate military type." });
-        }
-        if ((!originIsMilitary && destinationIsMilitary && origin.country !== "US")
-            || (!destinationIsMilitary && originIsMilitary && destination.country !== "US")) {
-            return res.status(400).json({ message: "Military shipping service only available between military & non-military US addresses." });
-        }
-
-        // Military state constraint
-        if (regionService?.service_name.startsWith("Military")) {
-            const expectedState = regionService.service_name.split(" - ")[1]; // Military - AE -> just AE
-            if (originIsMilitary && origin.state !== expectedState) {
-                return res.status(400).json({ message: `State must be ${expectedState} for selected military service.` });
-            }
-            if (destinationIsMilitary && destination.state !== expectedState) {
-                return res.status(400).json({ message: `State must be ${expectedState} for selected military service.` });
-            }
-        }
-
         // ── Query DB for shipping rates ───────────────────────────────────────
         const [shippingRates] = await pool.execute(
             `SELECT rate_type, rate_amount FROM shipping_rates`
@@ -117,21 +94,12 @@ const calculateEstimate = async (req, res) => {
             return res.status(500).json({ message: `Missing shipping rates: ${missingRates.join(", ")}` });
         }
 
-        // Military street, city, and postal code regex validation
-        if (originIsMilitary) validateMilitaryAddress(origin);
-        if (destinationIsMilitary) validateMilitaryAddress(destination);
-
         // ── Validate addresses and get coordinates ────────────────────────────
-        // Military addresses validated separately and use a flat distance rate
         const [originCoords, destinationCoords] = await Promise.all([
-            originIsMilitary      ? Promise.resolve(null) : validateAddress(origin),
-            destinationIsMilitary ? Promise.resolve(null) : validateAddress(destination),
-        ]);
+           validateAddress(origin), validateAddress(destination)]);
         // calculate total cost in ./services/shippingService  
         const totalCost = await calculateCost({
-            originIsMilitary, originCoords,
-            destinationIsMilitary, destinationCoords,
-            selectedServices, shippingRateMap, packages
+           originCoords, destinationCoords, selectedServices, shippingRateMap, packages
         });
 
         res.json({ totalCost });
@@ -142,18 +110,9 @@ const calculateEstimate = async (req, res) => {
             err.message?.startsWith("Could not geocode address")     ||
             err.message?.startsWith("Address not precise enough")    ||
             err.message?.startsWith("Unconfirmed address components");
-        const militaryAddressError =
-            err.message?.startsWith("Country must be US")            ||
-            err.message?.startsWith("City must be a valid military") ||
-            err.message?.startsWith("State must be a valid military") ||
-            err.message?.startsWith("Invalid military street address") ||
-            err.message?.startsWith("Invalid military postal code");
 
         if (isAddressError) {
             return res.status(400).json({ message: "An address that was input is invalid. Try Again."});
-        }
-        if (militaryAddressError) {
-            return res.status(400).json({ message: err.message });
         }
         console.error("Calculate Estimate error:", err);
         res.status(500).json({ message: "Server error." });

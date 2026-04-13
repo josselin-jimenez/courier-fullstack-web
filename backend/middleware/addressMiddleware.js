@@ -3,7 +3,6 @@
 // If address is valid, returns geocode
 // Ensured correct validation for supported countries
 // Not so ensured for unsupported countries
-// Just validates format for military addresses not existence
 const { Client } = require("@googlemaps/google-maps-services-js");
 const googleMapsClient = new Client({});
 
@@ -38,7 +37,7 @@ const validateAndGeocode = async (streetAddr, unit, city, state, country, postal
   );
 
   const data = await response.json();
-  console.log("Address Validation response:", JSON.stringify(data, null, 2));
+  //console.log("Address Validation response:", JSON.stringify(data, null, 2));
   const result = data.result;
 
   if (!result) {
@@ -81,7 +80,7 @@ const geocodeOnly = async (streetAddr, unit, city, state, country, postalCode) =
   const result = response.data.results[0];
   const locationType = result.geometry.location_type;
 
-  if (/*locationType === "GEOMETRIC_CENTER" ||*/ locationType === "APPROXIMATE") {
+  if (locationType === "GEOMETRIC_CENTER" || locationType === "APPROXIMATE") {
     throw new Error(`Address not precise enough: ${address}`);
   }
 
@@ -103,30 +102,5 @@ const validateAddress = ({ streetAddr, unit, city, state, country, postalCode })
   return geocodeOnly(streetAddr, unit, city, state, country, postalCode);
 };
 
-// ─── MILITARY ADDRESS VALIDATION ─────────────────────────────────────────────
-// Validates all military address fields — no Google API needed
-// Throws on invalid format, returns void if valid
-const MILITARY_STREET_RE  = /^(Unit|PSC|CMR)\s+\d{1,6}(\s+Box\s+\d{1,6})?$/i;
-const MILITARY_ZIP_RE     = /^(09[0-9]{3}|340[0-9]{2}|96[2-6][0-9]{2})$/;
-const ACCEPTABLE_MILITARY_CITIES = new Set(["APO", "FPO", "DPO"]);
-const ACCEPTABLE_MILITARY_STATES = new Set(["AE", "AA", "AP"]);
 
-const validateMilitaryAddress = ({streetAddr, city, state, country, postalCode}) => {
-  if (country !== "US") {
-    throw new Error("Country must be US for military address.");
-  }
-  if (!ACCEPTABLE_MILITARY_CITIES.has(city)) {
-    throw new Error("City must be a valid military post office (APO, FPO, or DPO).");
-  }
-  if (!ACCEPTABLE_MILITARY_STATES.has(state)) {
-    throw new Error("State must be a valid military state code (AE, AA, or AP).");
-  }
-  if (!MILITARY_STREET_RE.test(streetAddr)) {
-    throw new Error("Invalid military street address. Expected format: 'Unit 1234 Box 5678', 'PSC 1234 Box 5678', or 'CMR 1234'.");
-  }
-  if (!MILITARY_ZIP_RE.test(postalCode)) {
-    throw new Error(`Invalid military postal code for state ${state}. AE: 090xx-099xx, AA: 340xx, AP: 962xx-966xx.`);
-  }
-};
-
-module.exports = { validateAddress, validateMilitaryAddress };
+module.exports = { validateAddress };

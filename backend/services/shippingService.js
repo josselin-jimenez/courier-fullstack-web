@@ -19,7 +19,7 @@ const haversine = (lat1, lng1, lat2, lng2) => {
 // ─── CALCULATE COST ──────────────────────────────────────────────────────────
 // Accepts pre-validated coordinates from the controller
 // originCoords/destinationCoords are { lat, lng } or null for military
-const calculateCost = async ({ originIsMilitary, originCoords, destinationIsMilitary, destinationCoords, selectedServices, shippingRateMap, packages }) => {
+const calculateCost = async ({ originCoords, destinationCoords, selectedServices, shippingRateMap, packages }) => {
 
     // Services base cost total
     const serviceBaseCost = selectedServices.reduce((sum, s) => sum + parseFloat(s.base_cost), 0);
@@ -40,10 +40,8 @@ const calculateCost = async ({ originIsMilitary, originCoords, destinationIsMili
     const billableWeight = Math.max(totalWeight, totalDimWeight);
     const weightCost     = billableWeight * shippingRateMap.weight;
 
-    // Military origin/destination packages get flat rate (distance = 0)
-    // Non-military packages get charged a distance rate using pre-validated coords
-    const isMilitary = originIsMilitary || destinationIsMilitary || selectedServices.some(s => s.service_name.startsWith("Military"));
-    const distanceMiles = isMilitary ? 0 : haversine(originCoords.lat, originCoords.lng, destinationCoords.lat, destinationCoords.lng);
+    // Packages get charged a distance rate using pre-validated coords
+    const distanceMiles = haversine(originCoords.lat, originCoords.lng, destinationCoords.lat, destinationCoords.lng);
     const distanceCost  = distanceMiles * shippingRateMap.distance;
 
     // Handling fee charged per package in shipment

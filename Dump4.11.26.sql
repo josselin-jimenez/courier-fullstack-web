@@ -481,7 +481,7 @@ CREATE TABLE `service_type` (
 
 LOCK TABLES `service_type` WRITE;
 /*!40000 ALTER TABLE `service_type` DISABLE KEYS */;
-INSERT INTO `service_type` VALUES (1,'region','US',1.00),(2,'region','International',5.00),(3,'region','Military - AA',5.00),(4,'region','Military - AE',25.00),(5,'region','Military - AP',30.00),(10,'time','Regular',4.00),(11,'time','Express',10.00),(12,'time','Two-Day',25.00),(13,'time','Overnight',45.00),(20,'add-on','Signature',3.00),(21,'add-on','Pickup',5.00),(22,'add-on','Age Verification',3.00),(23,'add-on','Insurance',2.00),(30,'handling','Refridgerate',15.00),(40,'caution','Hazmat',10.00),(50,'created','Retail',2.00);
+INSERT INTO `service_type` VALUES (1,'region','US',1.00),(2,'region','International',5.00),(10,'time','Regular',4.00),(11,'time','Express',10.00),(12,'time','Two-Day',25.00),(13,'time','Overnight',45.00),(20,'add-on','Signature',3.00),(21,'add-on','Pickup',5.00),(22,'add-on','Age Verification',3.00),(23,'add-on','Insurance',2.00),(30,'handling','Refridgerate',15.00),(40,'caution','Hazmat',10.00),(50,'created','Retail',2.00);
 /*!40000 ALTER TABLE `service_type` ENABLE KEYS */;
 UNLOCK TABLES;
 

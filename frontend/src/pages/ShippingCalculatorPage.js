@@ -84,12 +84,10 @@ function ShippingCalculatorPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    selections:          {},
-    origin:              { ...EMPTY_ADDRESS },
-    originIsMilitary:    false,
-    destination:         { ...EMPTY_ADDRESS },
-    destinationIsMilitary: false,
-    packages:            [{ weight: "", length: "", width: "", height: "", value: "" }],
+    selections:  {},
+    origin:      { ...EMPTY_ADDRESS },
+    destination: { ...EMPTY_ADDRESS },
+    packages:    [{ weight: "", length: "", width: "", height: "", value: "" }],
   });
 
   const [errors,  setErrors]  = useState({});
@@ -98,12 +96,6 @@ function ShippingCalculatorPage() {
 
   const setError = (section, message) => setErrors(prev => ({ ...prev, [section]: message }));
   const clearErrors = () => setErrors({});
-
-  // Derived from the selected region service — used by military address fields and submit payload
-  const selectedRegionService = services.region?.find(s => s.service_type_no === formData.selections.region);
-  const militaryStateCode = selectedRegionService?.service_name?.startsWith("Military")
-    ? (selectedRegionService.service_name.split(" - ")[1] ?? "")
-    : "";
 
   // ── Fetch services on mount ───────────────────────────────────────────────
   useEffect(() => {
@@ -147,22 +139,6 @@ function ShippingCalculatorPage() {
     }));
   };
 
-  const handleMilitaryToggle = (flagKey) => {
-    setFormData((prev) => {
-      const turningOn = !prev[flagKey];
-      const addressKey = flagKey === "originIsMilitary" ? "origin" : "destination";
-      return {
-        ...prev,
-        [flagKey]: turningOn,
-        // Clear the address when toggling so the user re-enters in the right format
-        // Pre-fill country as US when switching to military since APO/FPO/DPO are always US
-        [addressKey]: turningOn
-          ? { ...EMPTY_ADDRESS, country: "US" }
-          : { ...EMPTY_ADDRESS },
-      };
-    });
-  };
-
   const handlePackageChange = (index, field, value) => {
     setFormData((prev) => {
       const packages = [...prev.packages];
@@ -196,24 +172,12 @@ function ShippingCalculatorPage() {
     if (!formData.selections.region) { setError("services", "Please select a region."); hasError = true; }
     if (!formData.selections.time)   { setError("services", "Please select a delivery speed."); hasError = true; }
 
-    if (formData.originIsMilitary) {
-      if (!formData.origin.streetAddr) { setError("origin", "Please enter an origin street address."); hasError = true; }
-      else if (!formData.origin.city)  { setError("origin", "Please select an origin city (APO/FPO/DPO)."); hasError = true; }
-      else if (!militaryStateCode)     { setError("origin", "Please select a military region service to determine the origin state."); hasError = true; }
-    } else {
-      if (!formData.origin.streetAddr || !formData.origin.city || !formData.origin.state || !formData.origin.country) {
-        setError("origin", "Please fill all origin address fields."); hasError = true;
-      }
+    if (!formData.origin.streetAddr || !formData.origin.city || !formData.origin.state || !formData.origin.country) {
+      setError("origin", "Please fill all origin address fields."); hasError = true;
     }
 
-    if (formData.destinationIsMilitary) {
-      if (!formData.destination.streetAddr) { setError("destination", "Please enter a destination street address."); hasError = true; }
-      else if (!formData.destination.city)  { setError("destination", "Please select a destination city (APO/FPO/DPO)."); hasError = true; }
-      else if (!militaryStateCode)          { setError("destination", "Please select a military region service to determine the destination state."); hasError = true; }
-    } else {
-      if (!formData.destination.streetAddr || !formData.destination.city || !formData.destination.state || !formData.destination.country) {
-        setError("destination", "Please fill all destination address fields."); hasError = true;
-      }
+    if (!formData.destination.streetAddr || !formData.destination.city || !formData.destination.state || !formData.destination.country) {
+      setError("destination", "Please fill all destination address fields."); hasError = true;
     }
 
     if (formData.packages.some((pkg) => !pkg.weight || !pkg.length || !pkg.width || !pkg.height)) {
@@ -234,11 +198,9 @@ function ShippingCalculatorPage() {
       setLoading(true);
       const data = await calculateShippingEstimate({
         serviceTypes,
-        origin:                formData.originIsMilitary ? { ...formData.origin, state: militaryStateCode } : formData.origin,
-        originIsMilitary:      formData.originIsMilitary,
-        destination:           formData.destinationIsMilitary ? { ...formData.destination, state: militaryStateCode } : formData.destination,
-        destinationIsMilitary: formData.destinationIsMilitary,
-        packages:              formData.packages,
+        origin:      formData.origin,
+        destination: formData.destination,
+        packages:    formData.packages,
       });
       setSuccess(`Estimated cost: $${data.totalCost.toFixed(2)}`);
     } catch (err) {
@@ -249,32 +211,14 @@ function ShippingCalculatorPage() {
   };
 
   // ── Address section — reused for origin and destination ───────────────────
-  const renderAddressFields = (addressKey, flagKey, label) => {
-    const addr       = formData[addressKey];
-    const isMilitary = formData[flagKey];
-    const errorKey   = addressKey; // "origin" or "destination"
+  const renderAddressFields = (addressKey, label) => {
+    const addr = formData[addressKey];
 
     return (
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h6" fontWeight="bold">{label}</Typography>
-          <FormControlLabel
-            label="Military address (APO/FPO/DPO)"
-            control={
-              <Checkbox
-                checked={isMilitary}
-                onChange={() => handleMilitaryToggle(flagKey)}
-              />
-            }
-          />
-        </Box>
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>{label}</Typography>
 
-        {errors[errorKey] && <Alert severity="error" sx={{ mb: 2 }}>{errors[errorKey]}</Alert>}
-        {isMilitary && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Enter the military address — e.g. street: "Unit 1234 Box 5678", postal: "09001". City, state, and country are determined by your selected military region service.
-          </Alert>
-        )}
+        {errors[addressKey] && <Alert severity="error" sx={{ mb: 2 }}>{errors[addressKey]}</Alert>}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
@@ -290,61 +234,33 @@ function ShippingCalculatorPage() {
             onChange={(e) => handleAddressChange(addressKey, "unit", e.target.value)}
           />
           <Box sx={{ display: "flex", gap: 2 }}>
-            {isMilitary ? (
-              <FormControl fullWidth>
-                <InputLabel>City</InputLabel>
-                <Select
-                  label="City"
-                  value={addr.city}
-                  onChange={(e) => handleAddressChange(addressKey, "city", e.target.value)}
-                >
-                  <MenuItem value="APO">APO — Army Post Office</MenuItem>
-                  <MenuItem value="FPO">FPO — Fleet Post Office</MenuItem>
-                  <MenuItem value="DPO">DPO — Diplomatic Post Office</MenuItem>
-                </Select>
-              </FormControl>
-            ) : (
-              <TextField fullWidth label="City" value={addr.city}
-                onChange={(e) => handleAddressChange(addressKey, "city", e.target.value)} />
-            )}
-            {isMilitary ? (
-              <TextField
-                fullWidth label="State"
-                value={militaryStateCode}
-                disabled
-                helperText={!militaryStateCode ? "Select a military region service above" : ""}
-              />
-            ) : (
-              <TextField fullWidth label="State" value={addr.state}
-                onChange={(e) => handleAddressChange(addressKey, "state", e.target.value)} />
-            )}
+            <TextField fullWidth label="City" value={addr.city}
+              onChange={(e) => handleAddressChange(addressKey, "city", e.target.value)} />
+            <TextField fullWidth label="State" value={addr.state}
+              onChange={(e) => handleAddressChange(addressKey, "state", e.target.value)} />
           </Box>
           <Box sx={{ display: "flex", gap: 2 }}>
-            {isMilitary ? (
-              <TextField fullWidth label="Country" value="US" disabled />
-            ) : (
-              <FormControl fullWidth>
-                <InputLabel>Country</InputLabel>
-                <Select
-                  label="Country"
-                  value={addr.countrySelect ?? ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    handleAddressChange(addressKey, "countrySelect", val);
-                    handleAddressChange(addressKey, "country", val === "OTHER" ? "" : val);
-                  }}
-                >
-                  {VALIDATION_COUNTRIES.map(({ code, name }) => (
-                    <MenuItem key={code} value={code}>{code} — {name}</MenuItem>
-                  ))}
-                  <MenuItem value="OTHER">Other (not listed)</MenuItem>
-                </Select>
-              </FormControl>
-            )}
+            <FormControl fullWidth>
+              <InputLabel>Country</InputLabel>
+              <Select
+                label="Country"
+                value={addr.countrySelect ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleAddressChange(addressKey, "countrySelect", val);
+                  handleAddressChange(addressKey, "country", val === "OTHER" ? "" : val);
+                }}
+              >
+                {VALIDATION_COUNTRIES.map(({ code, name }) => (
+                  <MenuItem key={code} value={code}>{code} — {name}</MenuItem>
+                ))}
+                <MenuItem value="OTHER">Other (not listed)</MenuItem>
+              </Select>
+            </FormControl>
             <TextField fullWidth label="Postal Code" value={addr.postalCode}
               onChange={(e) => handleAddressChange(addressKey, "postalCode", e.target.value)} />
           </Box>
-          {!isMilitary && addr.countrySelect === "OTHER" && (
+          {addr.countrySelect === "OTHER" && (
             <TextField
               fullWidth
               label="Country Name (e.g. South Korea, Philippines)"
@@ -424,8 +340,8 @@ function ShippingCalculatorPage() {
             )}
           </Paper>
 
-          {renderAddressFields("origin",      "originIsMilitary",      "Origin Address")}
-          {renderAddressFields("destination", "destinationIsMilitary", "Destination Address")}
+          {renderAddressFields("origin",      "Origin Address")}
+          {renderAddressFields("destination", "Destination Address")}
 
           {/* ── PACKAGES ── */}
           <Paper elevation={2} sx={{ p: 3, mb: 3 }}>

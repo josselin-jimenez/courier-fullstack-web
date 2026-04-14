@@ -19,7 +19,7 @@ const haversine = (lat1, lng1, lat2, lng2) => {
 // ─── CALCULATE COST ──────────────────────────────────────────────────────────
 // Accepts pre-validated coordinates from the controller
 // originCoords/destinationCoords are { lat, lng } or null for military
-const calculateCost = async ({ originCoords, destinationCoords, selectedServices, shippingRateMap, packages }) => {
+const calculateCost = ({ originCoords, destinationCoords, selectedServices, shippingRateMap, packages }) => {
 
     // Services base cost total
     const serviceBaseCost = selectedServices.reduce((sum, s) => sum + parseFloat(s.base_cost), 0);

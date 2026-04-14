@@ -1,15 +1,17 @@
 const express = require("express");
-const {getServices, createOrder, calculateEstimate } = require("../controllers/shippingController");
+const {getServices, calculateEstimate, getQuote, takePayment } = require("../controllers/shippingController");
 const { verifyToken, requireRole } = require("../middleware/authMiddleware");
+const { verifyShipment, attachCustomerOrigin } = require("../middleware/shippingMiddleware");
 
 
 const router = express.Router();
 
 // Public routes
 router.get("/services", getServices);
-router.post("/estimate", calculateEstimate);
+router.post("/estimate", verifyShipment, calculateEstimate);
 
 // Private routes
-router.post("/order", verifyToken, requireRole("customer", "customer service"), createOrder);
+router.post("/quote", verifyToken, requireRole("customer"), attachCustomerOrigin, verifyShipment, getQuote);
+router.post("/payment", verifyToken, requireRole("customer"), attachCustomerOrigin, verifyShipment, takePayment);
 
 module.exports = router;

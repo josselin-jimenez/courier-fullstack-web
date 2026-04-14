@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
 function Navbar() {
-  const { token, logout } = useAuth();
+  const { token, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -29,9 +29,16 @@ function Navbar() {
           Track
         </Button>
         {token ? (
-          <Button color="inherit" onClick={handleLogout}>
-            Logout
-          </Button>
+          <>
+            {user?.role === "customer" && (
+              <Button color="inherit" component={Link} to="/ship">
+                Ship a Package
+              </Button>
+            )}
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
+          </>
         ) : (
           <>
             <Button color="inherit" component={Link} to="/ShippingCalculator">

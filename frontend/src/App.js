@@ -13,6 +13,7 @@ import HandlerHomePage from "./pages/HandlerHomePage";
 import CustomerServiceHomePage from "./pages/CustomerServiceHomePage";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import ShippingCalculatorPage from "./pages/ShippingCalculatorPage";
+import CustomerShippingPage from "./pages/CustomerShippingPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/HandlerHome" element={<PrivateRoute allowedRoles={["handler"]}><HandlerHomePage /></PrivateRoute>} />
           <Route path="/CustomerServiceHome" element={<PrivateRoute allowedRoles={["customer service"]}><CustomerServiceHomePage /></PrivateRoute>} />
           <Route path="/CustomerHome" element={<PrivateRoute allowedRoles={["customer"]}><CustomerHomePage /></PrivateRoute>} />
+          <Route path="/ship" element={<PrivateRoute allowedRoles={["customer"]}><CustomerShippingPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

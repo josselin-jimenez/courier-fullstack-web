@@ -1,12 +1,16 @@
 const express = require("express");
 const { verifyToken, requireRole } = require("../middleware/authMiddleware");
+
 const {
   getCustomerProfile,
   createCustomerTypeRequest,
-  getMyCustomerTypeRequestStatus,
+  getMyCustomerTypeRequestStatus
+} = require("../controllers/customerController");
+
+const {
   getCustomerTypeRequests,
   reviewCustomerTypeRequest
-} = require("../controllers/customerController");
+} = require("../controllers/customerServiceController");
 
 const router = express.Router();
 

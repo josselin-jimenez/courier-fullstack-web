@@ -135,8 +135,13 @@ const getMyCustomerTypeRequestStatus = async (req, res) => {
   }
 };
 
-module.exports = {
-  getCustomerProfile,
-  createCustomerTypeRequest,
-  getMyCustomerTypeRequestStatus,
+//create view for customer to get shipments with details
+const getCustomerShipments = async (req,res) => {
+  try {
+
+  } catch(err) {
+    
+  }
 };
+
+module.exports = { getCustomerProfile, createCustomerTypeRequest, getMyCustomerTypeRequestStatus };

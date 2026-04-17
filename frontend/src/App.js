@@ -14,6 +14,8 @@ import CustomerServiceHomePage from "./pages/CustomerServiceHomePage";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import ShippingCalculatorPage from "./pages/ShippingCalculatorPage";
 import CustomerShippingPage from "./pages/CustomerShippingPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
           <Route path="/CustomerServiceHome" element={<PrivateRoute allowedRoles={["customer service"]}><CustomerServiceHomePage /></PrivateRoute>} />
           <Route path="/CustomerHome" element={<PrivateRoute allowedRoles={["customer"]}><CustomerHomePage /></PrivateRoute>} />
           <Route path="/ship" element={<PrivateRoute allowedRoles={["customer"]}><CustomerShippingPage /></PrivateRoute>} />
+          <Route path="/checkout" element={<PrivateRoute allowedRoles={["customer"]}><CheckoutPage /></PrivateRoute>} />
+          <Route path="/order-confirmation" element={<PrivateRoute allowedRoles={["customer"]}><OrderConfirmationPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

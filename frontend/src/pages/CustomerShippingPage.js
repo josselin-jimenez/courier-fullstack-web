@@ -5,7 +5,7 @@ import {
   Radio, RadioGroup, FormControlLabel, FormControl, FormLabel,
   Checkbox, Divider, CircularProgress, Select, MenuItem, InputLabel,
 } from "@mui/material";
-import { getShippingServices, getQuote, startCheckout } from "../services/shippingService";
+import { getShippingServices, getQuote } from "../services/shippingService";
 import { getCustomerProfile } from "../services/customerService";
 
 const VALIDATION_COUNTRIES = [
@@ -95,10 +95,9 @@ function CustomerShippingPage() {
     packages:     [{ weight: "", length: "", width: "", height: "", value: "" }],
   });
 
-  const [errors,         setErrors]         = useState({});
-  const [quote,          setQuote]          = useState(null);
-  const [quoteLoading,   setQuoteLoading]   = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [errors,       setErrors]       = useState({});
+  const [quote,        setQuote]        = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const setError    = (section, message) => setErrors(prev => ({ ...prev, [section]: message }));
   const clearErrors = () => setErrors({});
@@ -216,16 +215,8 @@ function CustomerShippingPage() {
   };
 
   // ── Proceed to Payment ────────────────────────────────────────────────────
-  const handleProceedToPayment = async () => {
-    try {
-      setPaymentLoading(true);
-      const data = await startCheckout(buildPayload());
-      navigate("/checkout", { state: { clientSecret: data.clientSecret } });
-    } catch (err) {
-      setError("api", err.response?.data?.message || "Failed to start checkout.");
-    } finally {
-      setPaymentLoading(false);
-    }
+  const handleProceedToPayment = () => {
+    navigate("/checkout", { state: { payload: buildPayload(), totalCost: quote } });
   };
 
   if (pageLoading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}><CircularProgress /></Box>;
@@ -245,7 +236,7 @@ function CustomerShippingPage() {
             <Typography variant="h6" fontWeight="bold" gutterBottom>Origin Address</Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Your shipment will be picked up from your registered address.
+              Your shipment will originate from this registered address.
             </Typography>
             <Typography>{profile.street_addr}{profile.addr_line_2 ? `, ${profile.addr_line_2}` : ""}</Typography>
             <Typography>{profile.city}, {profile.state} {profile.postal_code}</Typography>
@@ -437,10 +428,9 @@ function CustomerShippingPage() {
                   variant="contained"
                   color="success"
                   sx={{ py: 1.5 }}
-                  disabled={paymentLoading}
                   onClick={handleProceedToPayment}
                 >
-                  {paymentLoading ? "Loading..." : "Proceed to Payment"}
+                  Proceed to Payment
                 </Button>
               </>
             )}

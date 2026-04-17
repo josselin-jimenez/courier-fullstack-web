@@ -85,8 +85,16 @@ const register = async (req, res) => {
     } else {
       const [addressResult] = await connection.execute( 
         "INSERT INTO address (street_addr, addr_line_2, city, state, postal_code, country, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [custAddress.streetAddr, custAddress.unit || null, custAddress.city, custAddress.state, custAddress.postalCode, custAddress.country,
-          coordinatesCustAddr.lat, coordinatesCustAddr.lng ]
+        [
+          custAddress.streetAddr, 
+          custAddress.unit || null, 
+          custAddress.city, 
+          custAddress.state, 
+          custAddress.postalCode ? custAddress.postalCode.toUpperCase() : null,
+          custAddress.country,
+          coordinatesCustAddr.lat, 
+          coordinatesCustAddr.lng 
+        ]
       );
       addressId = addressResult.insertId;
     }

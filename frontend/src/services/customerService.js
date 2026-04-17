@@ -14,3 +14,13 @@ export async function getMyCustomerTypeRequestStatus() {
   const response = await api.get("/api/customer/request");
   return response.data;
 }
+
+export async function getAllCustomerTypeRequests() {
+  const response = await api.get("/api/customer/requests/all");
+  return response.data;
+}
+
+export async function reviewCustomerTypeRequest(requestId, status) {
+  const response = await api.patch(`/api/customer/requests/${requestId}`, { status });
+  return response.data;
+}

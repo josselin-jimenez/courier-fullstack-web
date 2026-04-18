@@ -5,7 +5,7 @@ With the following instructions you should be able to test front/backend develop
 
 **Please make sure to check backend and frontend readMe's as well for more info**
 
-**I added google API keys for address validation and distance calculation, CONTACT ME FOR THEM**
+**API KEYS on discord**
 
 **If you have problems with already stored hashed passwords it might be bc they were created with my token**
 

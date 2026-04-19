@@ -9,22 +9,24 @@ import { useAuth } from "../context/authContext";
 const navConfig = {
   customer: [
     { label: "Home", to: "/" },
+    { label: "Dashboard", to: "/CustomerHome" },
     { label: "Track", to: "/track" },
     { label: "Ship a Package", to: "/ship" },
   ],
   driver: [
+    { label: "Dashboard", to: "/DriverHome" },
     { label: "Track", to: "/track" },
   ],
   handler: [
+    { label: "Dashboard", to: "/HandlerHome" },
     { label: "Track", to: "/track" },
   ],
   admin: [
+    { label: "Dashboard", to: "/AdminHome" },
     { label: "Track", to: "/track" },
   ],
   "customer service": [
-    { label: "Track", to: "/track" },
-  ],
-  uma: [
+    { label: "Dashboard", to: "/CustomerServiceHome" },
     { label: "Track", to: "/track" },
   ],
   guest: [
@@ -36,7 +38,7 @@ const navConfig = {
   ],
 };
 
-const employeeRoles = ["driver", "handler", "admin", "customer service", "uma"];
+const employeeRoles = ["driver", "handler", "admin", "customer service"];
 
 function Navbar() {
   const { token, user, logout } = useAuth();

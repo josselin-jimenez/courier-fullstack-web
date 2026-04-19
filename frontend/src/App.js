@@ -7,7 +7,6 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Navbar from "./components/Navbar";
-import UmaHomePage from "./pages/UmaHomePage";
 import AdminHomePage from "./pages/AdminHomePage";
 import DriverHomePage from "./pages/DriverHomePage";
 import HandlerHomePage from "./pages/HandlerHomePage";
@@ -18,7 +17,7 @@ import CustomerShippingPage from "./pages/CustomerShippingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 
-const employeeRoles = ["driver", "handler", "admin", "customer service", "uma"];
+const employeeRoles = ["driver", "handler", "admin", "customer service"];
 
 function ThemedApp() {
   const { user } = useAuth();
@@ -39,7 +38,6 @@ function ThemedApp() {
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/ShippingCalculator" element={<PublicRoute><ShippingCalculatorPage /></PublicRoute>} />
-          <Route path="/UmaHome" element={<PrivateRoute allowedRoles={["uma"]}><UmaHomePage /></PrivateRoute>} />
           <Route path="/AdminHome" element={<PrivateRoute allowedRoles={["admin"]}><AdminHomePage /></PrivateRoute>} />
           <Route path="/DriverHome" element={<PrivateRoute allowedRoles={["driver"]}><DriverHomePage /></PrivateRoute>} />
           <Route path="/HandlerHome" element={<PrivateRoute allowedRoles={["handler"]}><HandlerHomePage /></PrivateRoute>} />

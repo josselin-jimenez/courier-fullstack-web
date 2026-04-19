@@ -125,9 +125,7 @@ function RegisterPage() {
       const decoded = jwtDecode(token);
 
       setTimeout(() => {
-        if (decoded.role === "uma") {
-          navigate("/UmaHome");
-        } else if (decoded.role === "admin") {
+        if (decoded.role === "admin") {
           navigate("/AdminHome");
         } else if (decoded.role === "driver") {
           navigate("/DriverHome");

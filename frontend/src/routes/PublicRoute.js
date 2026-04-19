@@ -2,7 +2,6 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
 const roleHomeMap = {
-  uma: "/UmaHome",
   admin: "/AdminHome",
   driver: "/DriverHome",
   handler: "/HandlerHome",

@@ -112,6 +112,7 @@ const createShipment = async (req, res) => {
 
         // ── DB Transaction ───────────────────────────────────────────────────────
         const conn = await pool.getConnection();
+        await conn.execute(`SET @current_employee_id = ?`, [process.env.SYSTEM_EMPLOYEE_ID]);
         try {
             await conn.beginTransaction();
 
@@ -216,6 +217,6 @@ const createShipment = async (req, res) => {
         res.status(500).json({ message: "Server error." });
     }
 };
-// NEED TO ADD TRIGGER THAT CREATES FIRST PACKAGE TRACKING EVENT
+// Trigger creates first package tracking event
 
 module.exports = { getServices, calculateEstimate, getQuote, createShipment };

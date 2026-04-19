@@ -86,12 +86,12 @@ const register = async (req, res) => {
       const [addressResult] = await connection.execute( 
         "INSERT INTO address (street_addr, addr_line_2, city, state, postal_code, country, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
-          custAddress.streetAddr, 
-          custAddress.unit || null, 
-          custAddress.city, 
-          custAddress.state, 
-          custAddress.postalCode ? custAddress.postalCode.toUpperCase() : null,
-          custAddress.country,
+          custAddress.streetAddr.trim(), 
+          custAddress.unit.trim() || null, 
+          custAddress.city.trim(), 
+          custAddress.state.trim(), 
+          custAddress.postalCode.trim() ? custAddress.postalCode.trim().toUpperCase() : null,
+          custAddress.country.trim(),
           coordinatesCustAddr.lat, 
           coordinatesCustAddr.lng 
         ]
@@ -101,7 +101,7 @@ const register = async (req, res) => {
 
     const [userResult] = await connection.execute(
       "INSERT INTO users (name, email, password, phone_num) VALUES (?, ?, ?, ?)",
-      [name, email, hashedPassword, phone]
+      [name.trim(), email.trim(), hashedPassword, phone.trim()]
     );
 
     const userId = userResult.insertId;
@@ -142,7 +142,7 @@ const login = async (req, res) => {
   try {
     const [rows] = await pool.execute(
       "SELECT user_id, name, email, password, phone_num, role FROM users WHERE email = ?",
-      [email]
+      [email.trim()]
     );
 
     if (rows.length === 0) {

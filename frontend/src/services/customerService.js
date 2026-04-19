@@ -5,6 +5,16 @@ export async function getCustomerProfile() {
   return response.data;
 }
 
+export async function updateCustomerProfile(name, email, phone) {
+  const response = await api.patch("/api/customer/profile", { name, email, phone });
+  return response.data;
+}
+
+export async function updateCustomerAddress(streetAddr, unit, city, state, country, postalCode) {
+  const response = await api.patch("/api/customer/address", { streetAddr, unit, city, state, country, postalCode });
+  return response.data;
+}
+
 export async function submitCustomerTypeRequest(businessName, requestInfo) {
   const response = await api.post("/api/customer/request", { businessName, requestInfo });
   return response.data;

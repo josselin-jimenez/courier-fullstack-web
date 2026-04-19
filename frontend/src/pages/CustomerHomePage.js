@@ -17,6 +17,7 @@ function CustomerHomePage() {
   const [submitError, setSubmitError]     = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
 
+  // Getting customer profile and business request status
   useEffect(() => {
     Promise.all([getCustomerProfile(), getMyCustomerTypeRequestStatus()])
       .then(([profileData, statusData]) => {
@@ -27,6 +28,7 @@ function CustomerHomePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // submitting a business request on the form
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
     setSubmitError("");
@@ -56,10 +58,10 @@ function CustomerHomePage() {
   if (error)   return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
 
   const isPending  = requestStatus?.latestRequest?.status === "pending";
-  const isBusiness = requestStatus?.customerType === "business";
+  const isBusiness = requestStatus?.customerType === "Business";
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Welcome, {profile.name}
       </Typography>

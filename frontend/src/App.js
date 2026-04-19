@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/authContext";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { AuthProvider, useAuth } from "./context/authContext";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import HomePage from "./pages/HomePage";
@@ -17,9 +18,20 @@ import CustomerShippingPage from "./pages/CustomerShippingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 
-function App() {
+const employeeRoles = ["driver", "handler", "admin", "customer service", "uma"];
+
+function ThemedApp() {
+  const { user } = useAuth();
+  const isEmployee = user && employeeRoles.includes(user.role);
+
+  const theme = createTheme({
+    palette: {
+      primary: { main: isEmployee ? "#2e7d32" : "#215bb1" },
+    },
+  });
+
   return (
-    <AuthProvider>
+    <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Navbar />
         <Routes>
@@ -38,6 +50,14 @@ function App() {
           <Route path="/order-confirmation" element={<PrivateRoute allowedRoles={["customer"]}><OrderConfirmationPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
+    </ThemeProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ThemedApp />
     </AuthProvider>
   );
 }

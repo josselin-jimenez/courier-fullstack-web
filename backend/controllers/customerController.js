@@ -55,7 +55,7 @@ const createCustomerTypeRequest = async (req, res) => {
     const customer = customerResult[0];
 
     // Prevent inserting request if already business
-    if (customer.cust_type === "business") {
+    if (customer.cust_type === "Business") {
       return res.status(400).json({
         message: "Account is already business type."
       });

@@ -6,9 +6,45 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
+const navConfig = {
+  customer: [
+    { label: "Home", to: "/" },
+    { label: "Track", to: "/track" },
+    { label: "Ship a Package", to: "/ship" },
+  ],
+  driver: [
+    { label: "Track", to: "/track" },
+  ],
+  handler: [
+    { label: "Track", to: "/track" },
+  ],
+  admin: [
+    { label: "Track", to: "/track" },
+  ],
+  "customer service": [
+    { label: "Track", to: "/track" },
+  ],
+  uma: [
+    { label: "Track", to: "/track" },
+  ],
+  guest: [
+    { label: "Home", to: "/" },
+    { label: "Track", to: "/track" },
+    { label: "Get Estimate", to: "/ShippingCalculator" },
+    { label: "Login", to: "/login" },
+    { label: "Register", to: "/register" },
+  ],
+};
+
+const employeeRoles = ["driver", "handler", "admin", "customer service", "uma"];
+
 function Navbar() {
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const role = token && user ? user.role : "guest";
+  const links = navConfig[role] ?? navConfig.guest;
+  const navColor = employeeRoles.includes(role) ? "#2e7d32" : "#215bb1";
 
   const handleLogout = () => {
     logout();
@@ -16,41 +52,23 @@ function Navbar() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#215bb1" }}>
+    <AppBar position="static" sx={{ backgroundColor: navColor }}>
       <Toolbar>
         <LocalShippingIcon sx={{ mr: 1 }} />
         <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
-          Team 10 - Courier System
+          {token && user
+            ? `${user.name} | ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}` //DB names are lower case
+            : "Team 10 - Courier System"}
         </Typography>
-        <Button color="inherit" component={Link} to="/">
-          Home
-        </Button>
-        <Button color="inherit" component={Link} to="/track">
-          Track
-        </Button>
-        {token ? (
-          <>
-            {user?.role === "customer" && (
-              <Button color="inherit" component={Link} to="/ship">
-                Ship a Package
-              </Button>
-            )}
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button color="inherit" component={Link} to="/ShippingCalculator">
-              Get Estimate
-            </Button>
-            <Button color="inherit" component={Link} to="/login">
-              Login
-            </Button>
-            <Button color="inherit" component={Link} to="/register">
-              Register
-            </Button>
-          </>
+        {links.map(({ label, to }) => (
+          <Button key={label} color="inherit" component={Link} to={to}>
+            {label}
+          </Button>
+        ))}
+        {token && (
+          <Button color="inherit" onClick={handleLogout}>
+            Logout
+          </Button>
         )}
       </Toolbar>
     </AppBar>

@@ -3,23 +3,32 @@ import {
   Box,
   Button,
   Container,
-  Paper,
   Typography,
   CircularProgress,
   Alert,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Divider,
-  Stack
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   getAllCustomerTypeRequests,
-  reviewCustomerTypeRequest
+  reviewCustomerTypeRequest,
 } from "../services/customerService";
+
+const statusColor = { pending: "warning", approved: "success", rejected: "error" };
 
 function CustomerServiceHomePage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [hidePending, setHidePending] = useState(false);
 
   const loadRequests = async () => {
     try {
@@ -62,7 +71,6 @@ function CustomerServiceHomePage() {
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Customer Service Dashboard
       </Typography>
-
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Review customer type requests in earliest-submitted order.
       </Typography>
@@ -70,37 +78,65 @@ function CustomerServiceHomePage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {actionMessage && <Alert severity="success" sx={{ mb: 2 }}>{actionMessage}</Alert>}
 
-      {requests.length === 0 ? (
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography>No customer type requests found.</Typography>
-        </Paper>
-      ) : (
-        <Stack spacing={2}>
-          {requests.map((request) => (
-            <Paper key={request.request_id} elevation={3} sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="bold">
-                Request #{request.request_id}
-              </Typography>
-              <Divider sx={{ my: 2 }} />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={hidePending}
+            onChange={(e) => setHidePending(e.target.checked)}
+          />
+        }
+        label="Hide handled requests"
+        sx={{ mb: 2 }}
+      />
 
-              <Row label="Submitted By" value={request.name} />
+      {requests.length === 0 ? (
+        <Typography>No customer type requests found.</Typography>
+      ) : (
+        requests
+          .filter((r) => !hidePending || r.status === "pending")
+          .map((request) => (
+          <Accordion
+            key={request.request_id}
+            expanded={expanded === request.request_id}
+            onChange={(_, isExpanded) =>
+              setExpanded(isExpanded ? request.request_id : false)
+            }
+            sx={{ mb: 1 }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", width: "100%" }}>
+                <Typography fontWeight="bold" sx={{ minWidth: 100 }}>
+                  #{request.request_id}
+                </Typography>
+                <Typography sx={{ flexGrow: 1 }}>{request.name}</Typography>
+                <Typography color="text.secondary" sx={{ mr: 2 }}>
+                  {request.cust_type} → {request.requested_type}
+                </Typography>
+                <Chip
+                  label={request.status}
+                  color={statusColor[request.status] ?? "default"}
+                  size="small"
+                  sx={{ mr: 1 }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  {new Date(request.created_at).toLocaleDateString()}
+                </Typography>
+              </Box>
+            </AccordionSummary>
+
+            <AccordionDetails>
+              <Divider sx={{ mb: 2 }} />
               <Row label="Email" value={request.email} />
               <Row label="Phone" value={request.phone_num} />
-              <Row label="Current Type" value={request.cust_type} />
-              <Row label="Requested Type" value={request.requested_type} />
               <Row label="Business Name" value={request.business_name} />
               <Row label="Request Info" value={request.request_info} />
-              <Row label="Status" value={request.status} />
-              <Row
-                label="Created At"
-                value={new Date(request.created_at).toLocaleString()}
-              />
+              <Row label="Submitted" value={new Date(request.created_at).toLocaleString()} />
 
               {request.status === "pending" && (
                 <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
                   <Button
                     variant="contained"
-                    sx={{ backgroundColor: "#215bb1" }}
+                    color="primary"
                     onClick={() => handleReview(request.request_id, "approved")}
                   >
                     Approve
@@ -114,9 +150,9 @@ function CustomerServiceHomePage() {
                   </Button>
                 </Box>
               )}
-            </Paper>
-          ))}
-        </Stack>
+            </AccordionDetails>
+          </Accordion>
+        ))
       )}
     </Container>
   );

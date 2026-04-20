@@ -18,6 +18,7 @@ const authRoutes = require("./routes/authRoute");
 const shippingRoutes = require("./routes/shippingRoute");
 
 const customerRoutes = require("./routes/customerRoute");
+const employeeRoutes = require("./routes/employeeRoute");
 
 // Create app instance
 const app = express();
@@ -45,6 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/shipping", shippingRoutes);
 
 app.use("/api/customer", customerRoutes);
+app.use("/api/employee", employeeRoutes);
 
 // Basic test route
 app.get("/api/test", (req, res) => {

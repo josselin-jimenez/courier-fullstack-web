@@ -1,5 +1,148 @@
+// HandlerHomePage
+import { useEffect, useState } from "react";
+import {
+  Box, Container, Paper, Typography, CircularProgress, Alert,
+  Divider, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Chip,
+} from "@mui/material";
+import InventoryIcon  from "@mui/icons-material/Inventory";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { getHandlerDashboard } from "../services/employeeService";
+
+const GREEN = "#2e7d32";
+
+const statusColors = {
+  "pre-processing": "default",
+  processing:       "warning",
+  transit:          "info",
+  delivery:         "success",
+  damage:           "error",
+  flags:            "error",
+};
+
+function formatDateTime(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
 function HandlerHomePage() {
-  return <div>Handler Home</div>;
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState("");
+
+  useEffect(() => {
+    getHandlerDashboard()
+      .then(setData)
+      .catch(() => setError("Failed to load dashboard. Contact your administrator."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}><CircularProgress /></Box>;
+  if (error)   return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
+
+  const { employee, status_counts, recent_events } = data;
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        Handler Dashboard
+      </Typography>
+
+      {/* Facility */}
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <LocationOnIcon sx={{ color: GREEN }} />
+          <Typography variant="h6" fontWeight="bold">My Facility</Typography>
+        </Box>
+        <Divider sx={{ mb: 2 }} />
+        <Typography fontWeight="medium">{employee.facility_name}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ textTransform: "capitalize" }}>
+          {employee.department_type}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">{employee.facility_address}</Typography>
+      </Paper>
+
+      {/* Status breakdown */}
+      {status_counts.length > 0 && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" fontWeight="bold" gutterBottom>Packages Handled by Status</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            {status_counts.map((s) => (
+              <Paper key={s.status_type} variant="outlined" sx={{ p: 2, textAlign: "center", minWidth: 120 }}>
+                <Chip
+                  label={s.status_type}
+                  color={statusColors[s.status_type] ?? "default"}
+                  size="small"
+                  sx={{ mb: 1, textTransform: "capitalize" }}
+                />
+                <Typography variant="h5" fontWeight="bold">{s.cnt}</Typography>
+              </Paper>
+            ))}
+          </Box>
+        </Paper>
+      )}
+
+      {/* Recent events */}
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <InventoryIcon sx={{ color: GREEN }} />
+          <Typography variant="h6" fontWeight="bold">Recent Packages Processed</Typography>
+        </Box>
+        <Divider sx={{ mb: 2 }} />
+
+        {recent_events.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <InventoryIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
+            <Typography color="text.secondary">No packages processed yet.</Typography>
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#f1f8f1" }}>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Tracking #</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Location</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Weight</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Dimensions (in)</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: GREEN }}>Time</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recent_events.map((e) => (
+                  <TableRow key={e.pkg_tracking_event_id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontFamily="monospace" fontWeight="bold" color={GREEN}>
+                        {e.tracking_number}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={e.status_name}
+                        color={statusColors[e.status_type] ?? "default"}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{e.location_name ?? "—"}</TableCell>
+                    <TableCell>{e.pkg_weight} lbs</TableCell>
+                    <TableCell sx={{ color: "text.secondary" }}>
+                      {e.pkg_length} × {e.pkg_width} × {e.pkg_height}
+                    </TableCell>
+                    <TableCell sx={{ color: "text.secondary", fontSize: 13 }}>
+                      {formatDateTime(e.event_time)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
+    </Container>
+  );
 }
 
 export default HandlerHomePage;

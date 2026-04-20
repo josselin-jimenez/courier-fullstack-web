@@ -28,13 +28,13 @@ const getDriverDashboard = async (req, res) => {
           ps.status_name, ps.status_type,
           p.package_id, p.pkg_weight,
           s.tracking_number,
-          f.facility_name AS location_name,
+          loc.city AS location_city, loc.state AS location_state,
           v.vehicle_transit_identifier AS vehicle_id
        FROM package_tracking_event pte
        JOIN package        p   ON pte.for_package = p.package_id
        JOIN shipment       s   ON p.part_of_shipment = s.shipment_id
-       JOIN package_status ps  ON pte.status = ps.status_no
-       LEFT JOIN facility  f   ON pte.happened_at = f.facility_id
+       JOIN package_status ps  ON pte.event_status = ps.status_no
+       LEFT JOIN address   loc ON pte.happened_at = loc.address_id
        LEFT JOIN vehicle   v   ON pte.loaded_on = v.vehicle_id
        WHERE pte.handled_by = ?
        ORDER BY pte.event_time DESC LIMIT 20`,
@@ -73,12 +73,12 @@ const getHandlerDashboard = async (req, res) => {
           p.package_id, p.pkg_weight,
           p.pkg_length, p.pkg_width, p.pkg_height,
           s.tracking_number,
-          f.facility_name AS location_name
+          loc.city AS location_city, loc.state AS location_state
        FROM package_tracking_event pte
        JOIN package        p   ON pte.for_package = p.package_id
        JOIN shipment       s   ON p.part_of_shipment = s.shipment_id
-       JOIN package_status ps  ON pte.status = ps.status_no
-       LEFT JOIN facility  f   ON pte.happened_at = f.facility_id
+       JOIN package_status ps  ON pte.event_status = ps.status_no
+       LEFT JOIN address   loc ON pte.happened_at = loc.address_id
        WHERE pte.handled_by = ?
        ORDER BY pte.event_time DESC LIMIT 30`,
       [employee.employee_id]
@@ -86,7 +86,7 @@ const getHandlerDashboard = async (req, res) => {
     const [statusCounts] = await pool.execute(
       `SELECT ps.status_type, COUNT(*) AS cnt
        FROM package_tracking_event pte
-       JOIN package_status ps ON pte.status = ps.status_no
+       JOIN package_status ps ON pte.event_status = ps.status_no
        WHERE pte.handled_by = ?
        GROUP BY ps.status_type`,
       [employee.employee_id]

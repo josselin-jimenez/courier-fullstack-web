@@ -13,12 +13,10 @@ import { getDriverDashboard } from "../services/employeeService";
 const GREEN = "#2e7d32";
 
 const statusColors = {
-  "pre-processing": "default",
-  processing:       "warning",
-  transit:          "info",
-  delivery:         "success",
-  damage:           "error",
-  flags:            "error",
+  "Pre-Processing": "default",
+  "Processing":     "warning",
+  "Transit":        "info",
+  "Delivery":       "success",
 };
 
 function StatCard({ icon, label, value }) {
@@ -125,7 +123,7 @@ function DriverHomePage() {
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>{e.location_name ?? "—"}</TableCell>
+                    <TableCell>{e.location_city ? `${e.location_city}, ${e.location_state}` : "—"}</TableCell>
                     <TableCell>{e.vehicle_id ?? "—"}</TableCell>
                     <TableCell>{e.pkg_weight} lbs</TableCell>
                     <TableCell sx={{ color: "text.secondary", fontSize: 13 }}>

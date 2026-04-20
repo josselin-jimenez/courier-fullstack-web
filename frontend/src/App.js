@@ -16,6 +16,7 @@ import ShippingCalculatorPage from "./pages/ShippingCalculatorPage";
 import CustomerShippingPage from "./pages/CustomerShippingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
+import PackageTrackerPage from "./pages/PackageTrackerPage";
 
 const employeeRoles = ["driver", "handler", "admin", "customer service"];
 
@@ -46,6 +47,7 @@ function ThemedApp() {
           <Route path="/ship" element={<PrivateRoute allowedRoles={["customer"]}><CustomerShippingPage /></PrivateRoute>} />
           <Route path="/checkout" element={<PrivateRoute allowedRoles={["customer"]}><CheckoutPage /></PrivateRoute>} />
           <Route path="/order-confirmation" element={<PrivateRoute allowedRoles={["customer"]}><OrderConfirmationPage /></PrivateRoute>} />
+          <Route path="/track" element={<PrivateRoute allowedRoles={["customer"]}><PackageTrackerPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

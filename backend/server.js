@@ -16,11 +16,11 @@ const authRoutes = require("./routes/authRoute");
 
 //Import shipping router
 const shippingRoutes = require("./routes/shippingRoute");
+const trackingRoutes = require("./routes/trackingRoute");
 
 const customerRoutes = require("./routes/customerRoute");
 const employeeRoutes = require("./routes/employeeRoute");
 const scanRoutes = require("./routes/scanRoute");
-
 // Create app instance
 const app = express();
 
@@ -45,11 +45,11 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/tracking", trackingRoutes);
 
 app.use("/api/customer", customerRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/scan", scanRoutes);
-
 // Basic test route
 app.get("/api/test", (req, res) => {
     res.json({ message: "Backend is working!" });

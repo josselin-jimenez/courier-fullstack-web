@@ -1,7 +1,3 @@
-// controllers/scanController.js
-// Handles package scanning for handlers and drivers,
-// and admin editing of customer account type.
-
 const pool = require("../db");
 
 // Shared: get employee_id from logged-in user
@@ -13,29 +9,31 @@ async function getEmployeeId(userId) {
   return row ? row.employee_id : null;
 }
 
-// Shared: get facility_id for an employee
-async function getEmployeeFacilityId(userId) {
+// Shared: get facility address for an employee
+async function getEmployeeFacilityAddressId(userId) {
   const [[row]] = await pool.execute(
-    `SELECT e.works_at AS facility_id
-     FROM employee e WHERE e.employee_account = ? LIMIT 1`,
+    `SELECT f.facility_addr
+     FROM employee e
+     JOIN facility f ON e.works_at = f.facility_id
+     WHERE e.employee_account = ?
+     LIMIT 1`,
     [userId]
   );
-  return row ? row.facility_id : null;
+  return row ? row.facility_addr : null;
 }
 
 // GET PACKAGE STATUSES
-// Returns statuses filtered by type — handlers get processing statuses,
-// drivers get transit/delivery statuses
 const getPackageStatuses = async (req, res) => {
-  const { type } = req.query; // "handler" or "driver"
+  const { type } = req.query;
+
   try {
     let types;
     if (type === "handler") {
-      types = ["pre-processing", "processing"];
+      types = ["Pre-Processing", "Processing"];
     } else if (type === "driver") {
-      types = ["transit", "delivery"];
+      types = ["Transit", "Delivery"];
     } else {
-      types = ["pre-processing", "processing", "transit", "delivery", "damage", "flags"];
+      types = ["Pre-Processing", "Processing", "Transit", "Delivery"];
     }
 
     const placeholders = types.map(() => "?").join(", ");
@@ -46,6 +44,7 @@ const getPackageStatuses = async (req, res) => {
        ORDER BY status_no ASC`,
       types
     );
+
     res.json(rows);
   } catch (err) {
     console.error("getPackageStatuses error:", err);
@@ -53,17 +52,15 @@ const getPackageStatuses = async (req, res) => {
   }
 };
 
-// ─── SEARCH PACKAGE BY TRACKING NUMBER ───────────────────────────────────────
-// Looks up a package by shipment tracking number and returns
-// package info + current status so the employee can scan it
+// SEARCH PACKAGE BY TRACKING NUMBER
 const searchPackage = async (req, res) => {
   const { trackingNumber } = req.query;
+
   if (!trackingNumber || !trackingNumber.trim()) {
     return res.status(400).json({ message: "Tracking number is required." });
   }
 
   try {
-    // Get all packages for this shipment
     const [packages] = await pool.execute(
       `SELECT
           p.package_id,
@@ -74,10 +71,10 @@ const searchPackage = async (req, res) => {
           ps.status_name AS current_status,
           ps.status_type AS current_status_type
        FROM package p
-       JOIN shipment s       ON p.part_of_shipment = s.shipment_id
-       JOIN address  dest    ON s.receiver_addr    = dest.address_id
+       JOIN shipment s ON p.part_of_shipment = s.shipment_id
+       JOIN address dest ON s.receiver_addr = dest.address_id
        LEFT JOIN (
-         SELECT pte.for_package, pte.status
+         SELECT pte.for_package, pte.event_status
          FROM package_tracking_event pte
          WHERE pte.pkg_tracking_event_id = (
            SELECT MAX(pte2.pkg_tracking_event_id)
@@ -85,7 +82,7 @@ const searchPackage = async (req, res) => {
            WHERE pte2.for_package = pte.for_package
          )
        ) latest ON latest.for_package = p.package_id
-       LEFT JOIN package_status ps ON latest.status = ps.status_no
+       LEFT JOIN package_status ps ON latest.event_status = ps.status_no
        WHERE s.tracking_number = ?
        ORDER BY p.package_id ASC`,
       [trackingNumber.trim().toUpperCase()]
@@ -102,10 +99,7 @@ const searchPackage = async (req, res) => {
   }
 };
 
-// ─── HANDLER SCAN ─────────────────────────────────────────────────────────────
-// POST /api/scan/handler
-// Body: { packageId, statusNo }
-// Records that this handler processed a package at their facility
+// HANDLER SCAN
 const handlerScan = async (req, res) => {
   const { packageId, statusNo } = req.body;
 
@@ -119,27 +113,28 @@ const handlerScan = async (req, res) => {
       return res.status(404).json({ message: "Employee profile not found." });
     }
 
-    const facilityId = await getEmployeeFacilityId(req.user.id);
-    if (!facilityId) {
-      return res.status(404).json({ message: "Facility not found for this employee." });
+    const facilityAddrId = await getEmployeeFacilityAddressId(req.user.id);
+    if (!facilityAddrId) {
+      return res.status(404).json({ message: "Facility location not found for this employee." });
     }
 
-    // Verify package exists
     const [[pkg]] = await pool.execute(
-      `SELECT package_id FROM package WHERE package_id = ? LIMIT 1`, [packageId]
+      `SELECT package_id FROM package WHERE package_id = ? LIMIT 1`,
+      [packageId]
     );
-    if (!pkg) return res.status(404).json({ message: "Package not found." });
 
-    // Insert tracking event
+    if (!pkg) {
+      return res.status(404).json({ message: "Package not found." });
+    }
+
     await pool.execute(
-      `INSERT INTO package_tracking_event (for_package, status, event_time, happened_at, handled_by)
+      `INSERT INTO package_tracking_event (for_package, event_status, event_time, happened_at, handled_by)
        VALUES (?, ?, NOW(), ?, ?)`,
-      [packageId, statusNo, facilityId, employeeId]
+      [packageId, statusNo, facilityAddrId, employeeId]
     );
 
     res.status(201).json({ message: "Package scanned successfully." });
   } catch (err) {
-    // Handle trigger errors (duplicate scan, backwards status)
     if (err.sqlState === "45000") {
       return res.status(400).json({ message: err.message });
     }
@@ -148,10 +143,7 @@ const handlerScan = async (req, res) => {
   }
 };
 
-// ─── DRIVER SCAN ──────────────────────────────────────────────────────────────
-// POST /api/scan/driver
-// Body: { packageId, statusNo, vehicleId (optional) }
-// Records that this driver scanned a package (pickup/transit/delivery)
+// DRIVER SCAN
 const driverScan = async (req, res) => {
   const { packageId, statusNo, vehicleId } = req.body;
 
@@ -165,30 +157,35 @@ const driverScan = async (req, res) => {
       return res.status(404).json({ message: "Employee profile not found." });
     }
 
-    const facilityId = await getEmployeeFacilityId(req.user.id);
-    if (!facilityId) {
-      return res.status(404).json({ message: "Facility not found for this employee." });
+    const facilityAddrId = await getEmployeeFacilityAddressId(req.user.id);
+    if (!facilityAddrId) {
+      return res.status(404).json({ message: "Facility location not found for this employee." });
     }
 
-    // Verify package exists
     const [[pkg]] = await pool.execute(
-      `SELECT package_id FROM package WHERE package_id = ? LIMIT 1`, [packageId]
+      `SELECT package_id FROM package WHERE package_id = ? LIMIT 1`,
+      [packageId]
     );
-    if (!pkg) return res.status(404).json({ message: "Package not found." });
 
-    // Verify vehicle exists if provided
+    if (!pkg) {
+      return res.status(404).json({ message: "Package not found." });
+    }
+
     if (vehicleId) {
       const [[vehicle]] = await pool.execute(
-        `SELECT vehicle_id FROM vehicle WHERE vehicle_id = ? LIMIT 1`, [vehicleId]
+        `SELECT vehicle_id FROM vehicle WHERE vehicle_id = ? LIMIT 1`,
+        [vehicleId]
       );
-      if (!vehicle) return res.status(404).json({ message: "Vehicle not found." });
+
+      if (!vehicle) {
+        return res.status(404).json({ message: "Vehicle not found." });
+      }
     }
 
-    // Insert tracking event
     await pool.execute(
-      `INSERT INTO package_tracking_event (for_package, status, event_time, happened_at, loaded_on, handled_by)
+      `INSERT INTO package_tracking_event (for_package, event_status, event_time, happened_at, loaded_on, handled_by)
        VALUES (?, ?, NOW(), ?, ?, ?)`,
-      [packageId, statusNo, facilityId, vehicleId || null, employeeId]
+      [packageId, statusNo, facilityAddrId, vehicleId || null, employeeId]
     );
 
     res.status(201).json({ message: "Package scanned successfully." });
@@ -201,13 +198,13 @@ const driverScan = async (req, res) => {
   }
 };
 
-// ─── GET VEHICLES ─────────────────────────────────────────────────────────────
-// Returns all vehicles (for driver scan dropdown)
+// GET VEHICLES
 const getVehicles = async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT vehicle_id, vehicle_type, vehicle_transit_identifier, vehicle_status
-       FROM vehicle ORDER BY vehicle_transit_identifier ASC`
+       FROM vehicle
+       ORDER BY vehicle_transit_identifier ASC`
     );
     res.json(rows);
   } catch (err) {
@@ -216,9 +213,7 @@ const getVehicles = async (req, res) => {
   }
 };
 
-// ─── ADMIN — EDIT CUSTOMER TYPE ───────────────────────────────────────────────
-// PATCH /api/scan/admin/customer/:userId
-// Body: { custType: "Normal" | "Business", businessName?: string }
+// ADMIN — EDIT CUSTOMER TYPE
 const editCustomerType = async (req, res) => {
   const targetUserId = Number(req.params.userId);
   const { custType, businessName } = req.body;
@@ -226,15 +221,17 @@ const editCustomerType = async (req, res) => {
   if (!custType || !["Normal", "Business"].includes(custType)) {
     return res.status(400).json({ message: "custType must be Normal or Business." });
   }
+
   if (custType === "Business" && (!businessName || !businessName.trim())) {
     return res.status(400).json({ message: "Business name is required for Business accounts." });
   }
 
   try {
-    // Get cust_id for this user
     const [[customer]] = await pool.execute(
-      `SELECT cust_id FROM customer WHERE cust_account = ? LIMIT 1`, [targetUserId]
+      `SELECT cust_id FROM customer WHERE cust_account = ? LIMIT 1`,
+      [targetUserId]
     );
+
     if (!customer) {
       return res.status(404).json({ message: "Customer profile not found." });
     }

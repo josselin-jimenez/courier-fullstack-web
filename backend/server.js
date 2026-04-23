@@ -19,6 +19,7 @@ const shippingRoutes = require("./routes/shippingRoute");
 
 const customerRoutes = require("./routes/customerRoute");
 const employeeRoutes = require("./routes/employeeRoute");
+const scanRoutes = require("./routes/scanRoute");
 
 // Create app instance
 const app = express();
@@ -37,7 +38,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 // Logs requests in terminal
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// Routes
 
 // Public auth routes — no token needed to hit these
 // Any request to /api/auth/... gets handed to routes/auth.js
@@ -47,6 +48,7 @@ app.use("/api/shipping", shippingRoutes);
 
 app.use("/api/customer", customerRoutes);
 app.use("/api/employee", employeeRoutes);
+app.use("/api/scan", scanRoutes);
 
 // Basic test route
 app.get("/api/test", (req, res) => {

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 // services/employeeService.js
-=======
->>>>>>> origin/main
 import api from "../api/axios";
 
 export async function getDriverDashboard() {
@@ -17,7 +14,6 @@ export async function getHandlerDashboard() {
 export async function getAdminDashboard() {
   const response = await api.get("/api/employee/admin");
   return response.data;
-<<<<<<< HEAD
 }
 
 export async function getRevenueReport(startDate, endDate) {
@@ -40,6 +36,4 @@ export async function editEmployee(userId, payload) {
 export async function deleteEmployee(userId) {
   const response = await api.delete(`/api/employee/admin/delete/${userId}`);
   return response.data;
-=======
->>>>>>> origin/main
 }

@@ -36,6 +36,16 @@ function OrderConfirmationPage() {
           </Paper>
         )}
 
+        {trackingNumber && (
+          <Button
+            variant="outlined"
+            sx={{ mb: 2 }}
+            onClick={() => navigate(`/track?trackingNumber=${trackingNumber}`)}
+          >
+            Track This Shipment
+          </Button>
+        )}
+
         <Button
           variant="contained"
           sx={{ backgroundColor: "#215bb1" }}

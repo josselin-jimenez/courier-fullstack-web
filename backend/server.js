@@ -16,6 +16,7 @@ const authRoutes = require("./routes/authRoute");
 
 //Import shipping router
 const shippingRoutes = require("./routes/shippingRoute");
+const trackingRoutes = require("./routes/trackingRoute");
 
 const customerRoutes = require("./routes/customerRoute");
 const employeeRoutes = require("./routes/employeeRoute");
@@ -44,6 +45,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/tracking", trackingRoutes);
 
 app.use("/api/customer", customerRoutes);
 app.use("/api/employee", employeeRoutes);

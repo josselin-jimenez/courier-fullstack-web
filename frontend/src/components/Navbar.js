@@ -14,12 +14,14 @@ const navConfig = {
     { label: "Ship a Package", to: "/ship" },
   ],
   driver: [
-    { label: "Dashboard", to: "/DriverHome" },
-    { label: "Track", to: "/track" },
+  { label: "Dashboard", to: "/DriverHome" },
+  { label: "Scan", to: "/driver-scan" },
+  { label: "Track", to: "/track" },
   ],
   handler: [
-    { label: "Dashboard", to: "/HandlerHome" },
-    { label: "Track", to: "/track" },
+  { label: "Dashboard", to: "/HandlerHome" },
+  { label: "Scan", to: "/handler-scan" },
+  { label: "Track", to: "/track" },
   ],
   admin: [
     { label: "Dashboard", to: "/AdminHome" },

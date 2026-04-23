@@ -17,6 +17,8 @@ import CustomerShippingPage from "./pages/CustomerShippingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import TrackingPage from "./pages/TrackingPage";
+import HandlerScanPage from "./pages/HandlerScanPage";
+import DriverScanPage from "./pages/DriverScanPage";
 
 const employeeRoles = ["driver", "handler", "admin", "customer service"];
 
@@ -43,6 +45,8 @@ function ThemedApp() {
           <Route path="/AdminHome" element={<PrivateRoute allowedRoles={["admin"]}><AdminHomePage /></PrivateRoute>} />
           <Route path="/DriverHome" element={<PrivateRoute allowedRoles={["driver"]}><DriverHomePage /></PrivateRoute>} />
           <Route path="/HandlerHome" element={<PrivateRoute allowedRoles={["handler"]}><HandlerHomePage /></PrivateRoute>} />
+          <Route path="/handler-scan" element={<PrivateRoute allowedRoles={["handler"]}><HandlerScanPage /></PrivateRoute>} />
+          <Route path="/driver-scan" element={<PrivateRoute allowedRoles={["driver"]}><DriverScanPage /></PrivateRoute>} />
           <Route path="/CustomerServiceHome" element={<PrivateRoute allowedRoles={["customer service"]}><CustomerServiceHomePage /></PrivateRoute>} />
           <Route path="/CustomerHome" element={<PrivateRoute allowedRoles={["customer"]}><CustomerHomePage /></PrivateRoute>} />
           <Route path="/ship" element={<PrivateRoute allowedRoles={["customer"]}><CustomerShippingPage /></PrivateRoute>} />
